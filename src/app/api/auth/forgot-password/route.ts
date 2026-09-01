@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClientIp } from "@/lib/auth/client-ip";
 import { assertAuthRateLimit } from "@/lib/auth/rate-limit";
 import { AUTH_RATE_LIMITS } from "@/lib/rate-limits";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 type ForgotPasswordBody = {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: rateLimit.message }, { status: 429 });
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = getSiteUrl(request);
   const next = encodeURIComponent("/auth/reset-password");
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {

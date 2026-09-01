@@ -1,7 +1,25 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function redirectAuthCodeFromLogin(request: NextRequest): NextResponse | null {
+  if (request.nextUrl.pathname !== "/login") return null;
+
+  const code = request.nextUrl.searchParams.get("code");
+  const tokenHash = request.nextUrl.searchParams.get("token_hash");
+  if (!code && !tokenHash) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/auth/callback";
+  if (!url.searchParams.has("next")) {
+    url.searchParams.set("next", "/auth/reset-password");
+  }
+  return NextResponse.redirect(url);
+}
+
 export async function updateSession(request: NextRequest) {
+  const authCodeRedirect = redirectAuthCodeFromLogin(request);
+  if (authCodeRedirect) return authCodeRedirect;
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
