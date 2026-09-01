@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EnterIcon } from "@/components/ui/icon";
@@ -12,6 +12,17 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("message") === "password_updated") {
+      setMessage("Password updated. You can sign in with your new password.");
+    }
+    if (params.get("error") === "auth_callback") {
+      setError("Reset link is invalid or expired. Please request a new one.");
+    }
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +74,7 @@ export function LoginForm() {
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-teal-600 focus:ring-2"
         />
       </div>
+      {message && <p className="text-sm text-teal-800">{message}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
         type="submit"

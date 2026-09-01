@@ -27,9 +27,10 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
+  const next = encodeURIComponent("/auth/reset-password");
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/auth/reset-password`,
+    redirectTo: `${origin}/auth/confirm?next=${next}`,
   });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

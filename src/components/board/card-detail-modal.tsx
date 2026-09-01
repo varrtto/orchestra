@@ -17,6 +17,7 @@ import type { Comment } from "@/lib/types";
 import {
   CalendarIcon,
   CommentIcon,
+  PencilIcon,
   TrashIcon,
   UserIcon,
   XIcon,
@@ -199,28 +200,30 @@ export function CardDetailModal() {
                           </span>
                         </p>
                         {canModify && !isEditing && (
-                          <div className="flex gap-2 text-xs">
+                          <div className="flex gap-1">
                             {comment.author_id === currentUserId && (
                               <button
                                 type="button"
-                                className="text-teal-700"
+                                className="cursor-pointer rounded p-1 text-slate-400 hover:bg-teal-50 hover:text-teal-700"
+                                aria-label="Edit comment"
                                 onClick={() => {
                                   setEditingCommentId(comment.id);
                                   setEditingBody(comment.body);
                                 }}
                               >
-                                Edit
+                                <PencilIcon size={14} />
                               </button>
                             )}
                             <button
                               type="button"
-                              className="text-red-600"
+                              className="cursor-pointer rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                              aria-label="Delete comment"
                               onClick={() => {
                                 setDeleteCommentError(null);
                                 setCommentToDelete(comment);
                               }}
                             >
-                              Delete
+                              <TrashIcon size={14} />
                             </button>
                           </div>
                         )}
