@@ -3,34 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { EnterIcon } from "@/components/ui/icon";
+import { useLoginMutation } from "@/hooks/use-auth";
 
 export function LoginForm() {
   const router = useRouter();
+  const login = useLoginMutation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    if (authError) {
-      setError(authError.message);
-      return;
+
+    try {
+      await login.mutateAsync({ email, password });
+      router.push("/boards");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in");
     }
-    await supabase.rpc("ensure_profile");
-    await supabase.rpc("claim_invites");
-    router.push("/boards");
-    router.refresh();
   }
 
   return (
@@ -49,9 +42,17 @@ export function LoginForm() {
         />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-          Password
-        </label>
+        <div className="mb-1 flex items-center justify-between">
+          <label htmlFor="password" className="text-sm font-medium text-slate-700">
+            Password
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-teal-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"
@@ -65,11 +66,11 @@ export function LoginForm() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
         type="submit"
-        disabled={loading}
+        disabled={login.isPending}
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2.5 font-medium text-white transition hover:bg-teal-800 disabled:opacity-60"
       >
         <EnterIcon size={18} color="currentColor" />
-        {loading ? "Signing in…" : "Sign in"}
+        {login.isPending ? "Signing in…" : "Sign in"}
       </button>
       <p className="text-center text-sm text-slate-600">
         No account?{" "}

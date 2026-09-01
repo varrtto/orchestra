@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { ExitIcon } from "@/components/ui/icon";
+import { useSignOutMutation } from "@/hooks/use-auth";
 
 export function SignOutButton({
   className,
@@ -12,10 +12,10 @@ export function SignOutButton({
   onSignedOut?: () => void;
 }) {
   const router = useRouter();
+  const signOut = useSignOutMutation();
 
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+  async function handleSignOut() {
+    await signOut.mutateAsync();
     onSignedOut?.();
     router.push("/login");
     router.refresh();
@@ -24,14 +24,15 @@ export function SignOutButton({
   return (
     <button
       type="button"
-      onClick={signOut}
+      onClick={() => void handleSignOut()}
+      disabled={signOut.isPending}
       className={
         className ??
-        "inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-base text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+        "inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-base text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-60"
       }
     >
       <ExitIcon size={18} />
-      Sign out
+      {signOut.isPending ? "Signing out…" : "Sign out"}
     </button>
   );
 }

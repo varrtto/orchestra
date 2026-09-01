@@ -2,6 +2,15 @@
 
 import { useId, useMemo, useState } from "react";
 import { useBoardStore } from "@/stores/board-store";
+import {
+  useAddCommentMutation,
+  useDeleteCardMutation,
+  useDeleteCommentMutation,
+  useToggleAssigneeMutation,
+  useToggleLabelMutation,
+  useUpdateCardMutation,
+  useUpdateCommentMutation,
+} from "@/hooks/use-board-mutations";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Modal } from "@/components/ui/modal";
 import type { Comment } from "@/lib/types";
@@ -25,13 +34,13 @@ export function CardDetailModal() {
   const canEdit = useBoardStore((s) => s.canEdit);
   const currentUserId = useBoardStore((s) => s.currentUserId);
   const role = useBoardStore((s) => s.role);
-  const updateCard = useBoardStore((s) => s.updateCard);
-  const deleteCard = useBoardStore((s) => s.deleteCard);
-  const toggleLabel = useBoardStore((s) => s.toggleLabel);
-  const toggleAssignee = useBoardStore((s) => s.toggleAssignee);
-  const addComment = useBoardStore((s) => s.addComment);
-  const updateComment = useBoardStore((s) => s.updateComment);
-  const deleteComment = useBoardStore((s) => s.deleteComment);
+  const updateCard = useUpdateCardMutation();
+  const deleteCard = useDeleteCardMutation();
+  const toggleLabel = useToggleLabelMutation();
+  const toggleAssignee = useToggleAssigneeMutation();
+  const addComment = useAddCommentMutation();
+  const updateComment = useUpdateCommentMutation();
+  const deleteComment = useDeleteCommentMutation();
 
   const card = cards.find((c) => c.id === selectedCardId);
   const editable = canEdit();
@@ -39,13 +48,12 @@ export function CardDetailModal() {
   const titleId = useId();
 
   const [commentDraft, setCommentDraft] = useState("");
+  const [commentError, setCommentError] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingBody, setEditingBody] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
-  const [deleteCommentLoading, setDeleteCommentLoading] = useState(false);
   const [deleteCommentError, setDeleteCommentError] = useState<string | null>(
     null,
   );
@@ -53,9 +61,8 @@ export function CardDetailModal() {
   async function onConfirmDeleteComment() {
     if (!commentToDelete) return;
     setDeleteCommentError(null);
-    setDeleteCommentLoading(true);
     try {
-      await deleteComment(commentToDelete.id);
+      await deleteComment.mutateAsync(commentToDelete.id);
       if (editingCommentId === commentToDelete.id) {
         setEditingCommentId(null);
         setEditingBody("");
@@ -65,24 +72,19 @@ export function CardDetailModal() {
       setDeleteCommentError(
         err instanceof Error ? err.message : "Failed to delete comment",
       );
-    } finally {
-      setDeleteCommentLoading(false);
     }
   }
 
   async function onConfirmDelete() {
     if (!selectedCardId) return;
     setDeleteError(null);
-    setDeleteLoading(true);
     try {
-      await deleteCard(selectedCardId);
+      await deleteCard.mutateAsync(selectedCardId);
       setConfirmDelete(false);
     } catch (err) {
       setDeleteError(
         err instanceof Error ? err.message : "Failed to delete card",
       );
-    } finally {
-      setDeleteLoading(false);
     }
   }
 
@@ -128,8 +130,11 @@ export function CardDetailModal() {
             disabled={!editable}
             onBlur={(e) => {
               const next = e.target.value.trim();
-              if (next && next !== card.title) void updateCard(card.id, { title: next });
-              else e.target.value = card.title;
+              if (next && next !== card.title) {
+                updateCard.mutate({ cardId: card.id, patch: { title: next } });
+              } else {
+                e.target.value = card.title;
+              }
             }}
           />
           <button
@@ -155,7 +160,10 @@ export function CardDetailModal() {
                 placeholder="Add a more detailed description…"
                 onBlur={(e) => {
                   if (e.target.value !== card.description) {
-                    void updateCard(card.id, { description: e.target.value });
+                    updateCard.mutate({
+                      cardId: card.id,
+                      patch: { description: e.target.value },
+                    });
                   }
                 }}
               />
@@ -229,7 +237,10 @@ export function CardDetailModal() {
                               type="button"
                               className="rounded bg-teal-700 px-2 py-1 text-xs text-white"
                               onClick={async () => {
-                                await updateComment(comment.id, editingBody.trim());
+                                await updateComment.mutateAsync({
+                                  commentId: comment.id,
+                                  body: editingBody.trim(),
+                                });
                                 setEditingCommentId(null);
                               }}
                             >
@@ -259,8 +270,18 @@ export function CardDetailModal() {
                   onSubmit={async (e) => {
                     e.preventDefault();
                     if (!commentDraft.trim()) return;
-                    await addComment(card.id, commentDraft.trim());
-                    setCommentDraft("");
+                    setCommentError(null);
+                    try {
+                      await addComment.mutateAsync({
+                        cardId: card.id,
+                        body: commentDraft.trim(),
+                      });
+                      setCommentDraft("");
+                    } catch (err) {
+                      setCommentError(
+                        err instanceof Error ? err.message : "Failed to post comment",
+                      );
+                    }
                   }}
                 >
                   <textarea
@@ -269,12 +290,15 @@ export function CardDetailModal() {
                     placeholder="Write a comment…"
                     className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2"
                   />
+                  {commentError && (
+                    <p className="text-sm text-red-600">{commentError}</p>
+                  )}
                   <button
                     type="submit"
-                    disabled={!commentDraft.trim()}
+                    disabled={!commentDraft.trim() || addComment.isPending}
                     className="self-start rounded-lg bg-teal-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                   >
-                    Post comment
+                    {addComment.isPending ? "Posting…" : "Post comment"}
                   </button>
                 </form>
               )}
@@ -292,10 +316,13 @@ export function CardDetailModal() {
                 disabled={!editable}
                 value={card.due_date ? card.due_date.slice(0, 10) : ""}
                 onChange={(e) => {
-                  void updateCard(card.id, {
-                    due_date: e.target.value
-                      ? new Date(e.target.value).toISOString()
-                      : null,
+                  updateCard.mutate({
+                    cardId: card.id,
+                    patch: {
+                      due_date: e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : null,
+                    },
                   });
                 }}
                 className="w-full rounded-lg border border-slate-200 px-2 py-1.5 outline-none"
@@ -314,7 +341,7 @@ export function CardDetailModal() {
                       key={label.id}
                       type="button"
                       disabled={!editable}
-                      onClick={() => void toggleLabel(card.id, label.id)}
+                      onClick={() => toggleLabel.mutate({ cardId: card.id, labelId: label.id })}
                       className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-left ${
                         active ? "bg-teal-50 ring-1 ring-teal-600/30" : "hover:bg-slate-50"
                       }`}
@@ -345,7 +372,7 @@ export function CardDetailModal() {
                       onChange={(event) => {
                         const userId = event.target.value;
                         if (!userId) return;
-                        void toggleAssignee(card.id, userId);
+                        toggleAssignee.mutate({ cardId: card.id, userId });
                       }}
                       className="w-full cursor-pointer rounded-lg border border-slate-200 px-2 py-1.5 text-sm outline-none ring-teal-600 focus:ring-2"
                       aria-label="Card assignees"
@@ -415,10 +442,10 @@ export function CardDetailModal() {
         message={`“${card.title}” will be permanently deleted.`}
         confirmLabel="Delete card"
         error={deleteError}
-        loading={deleteLoading}
+        loading={deleteCard.isPending}
         onConfirm={() => void onConfirmDelete()}
         onCancel={() => {
-          if (!deleteLoading) {
+          if (!deleteCard.isPending) {
             setConfirmDelete(false);
             setDeleteError(null);
           }
@@ -430,10 +457,10 @@ export function CardDetailModal() {
         message="This comment will be permanently deleted."
         confirmLabel="Delete comment"
         error={deleteCommentError}
-        loading={deleteCommentLoading}
+        loading={deleteComment.isPending}
         onConfirm={() => void onConfirmDeleteComment()}
         onCancel={() => {
-          if (!deleteCommentLoading) {
+          if (!deleteComment.isPending) {
             setCommentToDelete(null);
             setDeleteCommentError(null);
           }

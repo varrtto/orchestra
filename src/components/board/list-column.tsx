@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useDragAndDrop } from "@formkit/drag-and-drop/react";
 import { cardDndConfig, isCardDndActive } from "@/lib/board-card-dnd";
 import { useBoardStore } from "@/stores/board-store";
+import {
+  useAddCardMutation,
+  useDeleteListMutation,
+  useRenameListMutation,
+} from "@/hooks/use-board-mutations";
 import type { Card, List } from "@/lib/types";
 import { CardItem } from "@/components/board/card-item";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
@@ -29,9 +34,9 @@ export function ListColumn({
 }: ListColumnProps) {
   const allCards = useBoardStore((s) => s.cards);
   const canEdit = useBoardStore((s) => s.canEdit);
-  const renameList = useBoardStore((s) => s.renameList);
-  const deleteList = useBoardStore((s) => s.deleteList);
-  const addCard = useBoardStore((s) => s.addCard);
+  const renameList = useRenameListMutation();
+  const deleteList = useDeleteListMutation();
+  const addCard = useAddCardMutation();
   const editable = canEdit();
 
   const listCards = useMemo(
@@ -56,30 +61,34 @@ export function ListColumn({
   }, [listCards, setCards]);
 
   const [draft, setDraft] = useState("");
+  const [addCardError, setAddCardError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function onConfirmDelete() {
     setDeleteError(null);
-    setDeleteLoading(true);
     try {
-      await deleteList(list.id);
+      await deleteList.mutateAsync(list.id);
       setConfirmDelete(false);
     } catch (err) {
       setDeleteError(
         err instanceof Error ? err.message : "Failed to delete column",
       );
-    } finally {
-      setDeleteLoading(false);
     }
   }
 
   async function onAddCard(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
-    await addCard(list.id, draft.trim());
-    setDraft("");
+    setAddCardError(null);
+    try {
+      await addCard.mutateAsync({ listId: list.id, title: draft.trim() });
+      setDraft("");
+    } catch (err) {
+      setAddCardError(
+        err instanceof Error ? err.message : "Failed to create card",
+      );
+    }
   }
 
   return (
@@ -107,8 +116,11 @@ export function ListColumn({
           disabled={!editable}
           onBlur={(e) => {
             const next = e.target.value.trim();
-            if (next && next !== list.title) void renameList(list.id, next);
-            else e.target.value = list.title;
+            if (next && next !== list.title) {
+              renameList.mutate({ listId: list.id, title: next });
+            } else {
+              e.target.value = list.title;
+            }
           }}
         />
         {editable && (
@@ -146,9 +158,13 @@ export function ListColumn({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Add a card…"
-              className="w-full rounded-lg border border-transparent bg-white/70 py-1.5 pl-7 pr-2 text-sm outline-none ring-teal-600 placeholder:text-slate-400 focus:border-teal-700/20 focus:ring-1"
+              disabled={addCard.isPending}
+              className="w-full rounded-lg border border-transparent bg-white/70 py-1.5 pl-7 pr-2 text-sm outline-none ring-teal-600 placeholder:text-slate-400 focus:border-teal-700/20 focus:ring-1 disabled:opacity-60"
             />
           </div>
+          {addCardError && (
+            <p className="mt-1 text-xs text-red-600">{addCardError}</p>
+          )}
         </form>
       )}
 
@@ -158,10 +174,10 @@ export function ListColumn({
         message={`“${list.title}” and all of its cards will be permanently deleted.`}
         confirmLabel="Delete column"
         error={deleteError}
-        loading={deleteLoading}
+        loading={deleteList.isPending}
         onConfirm={() => void onConfirmDelete()}
         onCancel={() => {
-          if (!deleteLoading) {
+          if (!deleteList.isPending) {
             setConfirmDelete(false);
             setDeleteError(null);
           }

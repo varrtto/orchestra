@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { registerCardLayoutCommit } from "@/lib/board-card-dnd";
 import { useBoardStore } from "@/stores/board-store";
+import {
+  useAddListMutation,
+  useCommitListsLayoutMutation,
+  useReorderListsMutation,
+} from "@/hooks/use-board-mutations";
 import type { List } from "@/lib/types";
 import { ListColumn } from "@/components/board/list-column";
 import { PromptModal } from "@/components/ui/prompt-modal";
@@ -36,24 +41,23 @@ function getTargetIndex(
 export function BoardCanvas() {
   const lists = useBoardStore((s) => s.lists);
   const canEdit = useBoardStore((s) => s.canEdit);
-  const addList = useBoardStore((s) => s.addList);
-  const reorderLists = useBoardStore((s) => s.reorderLists);
-  const commitListsLayout = useBoardStore((s) => s.commitListsLayout);
+  const addList = useAddListMutation();
+  const reorderLists = useReorderListsMutation();
+  const commitListsLayout = useCommitListsLayoutMutation();
   const editable = canEdit();
 
   const [displayLists, setDisplayLists] = useState(lists);
   const [draggingListId, setDraggingListId] = useState<string | null>(null);
   const [addColumnOpen, setAddColumnOpen] = useState(false);
   const [addColumnKey, setAddColumnKey] = useState(0);
-  const [addColumnLoading, setAddColumnLoading] = useState(false);
   const [addColumnError, setAddColumnError] = useState<string | null>(null);
   const columnRefs = useRef(new Map<string, HTMLDivElement | null>());
   const draggingListIdRef = useRef<string | null>(null);
   const displayListsRef = useRef(lists);
 
   useEffect(() => {
-    registerCardLayoutCommit((updates) => commitListsLayout(updates));
-  }, [commitListsLayout]);
+    registerCardLayoutCommit((updates) => commitListsLayout.mutateAsync(updates));
+  }, [commitListsLayout.mutateAsync]);
 
   useEffect(() => {
     displayListsRef.current = displayLists;
@@ -68,16 +72,13 @@ export function BoardCanvas() {
 
   async function onConfirmAddColumn(title: string) {
     setAddColumnError(null);
-    setAddColumnLoading(true);
     try {
-      await addList(title);
+      await addList.mutateAsync(title);
       setAddColumnOpen(false);
     } catch (err) {
       setAddColumnError(
         err instanceof Error ? err.message : "Failed to create column",
       );
-    } finally {
-      setAddColumnLoading(false);
     }
   }
 
@@ -90,7 +91,7 @@ export function BoardCanvas() {
     setDraggingListId(null);
 
     if (orderedIds.join() !== currentIds.join()) {
-      void reorderLists(orderedIds);
+      reorderLists.mutate(orderedIds);
       return;
     }
 
@@ -183,10 +184,10 @@ export function BoardCanvas() {
         placeholder="e.g. In progress"
         confirmLabel="Add column"
         error={addColumnError}
-        loading={addColumnLoading}
+        loading={addList.isPending}
         onConfirm={(title) => void onConfirmAddColumn(title)}
         onCancel={() => {
-          if (!addColumnLoading) {
+          if (!addList.isPending) {
             setAddColumnOpen(false);
             setAddColumnError(null);
           }

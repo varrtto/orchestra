@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SectionLabel } from "@/components/ui/section-label";
 import {
@@ -18,7 +17,16 @@ import {
   BOARD_BACKGROUND_PRESETS,
   DEFAULT_BOARD_BACKGROUND_COLOR,
 } from "@/lib/board-background";
-import { queryKeys } from "@/lib/queries/boards";
+import {
+  useDeleteActiveBoardMutation,
+  useInviteMemberMutation,
+  useLeaveBoardMutation,
+  useRemoveMemberMutation,
+  useRenameBoardMutation,
+  useTransferOwnershipMutation,
+  useUpdateBoardBackgroundColorMutation,
+  useUpdateMemberRoleMutation,
+} from "@/hooks/use-board-mutations";
 import { useBoardStore } from "@/stores/board-store";
 import type { BoardRole } from "@/lib/types";
 
@@ -28,26 +36,23 @@ type BoardSettingsSidebarProps = {
 
 export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const board = useBoardStore((s) => s.board);
   const members = useBoardStore((s) => s.members);
   const role = useBoardStore((s) => s.role);
   const canEdit = useBoardStore((s) => s.canEdit);
   const currentUserId = useBoardStore((s) => s.currentUserId);
-  const renameBoard = useBoardStore((s) => s.renameBoard);
-  const updateBoardBackgroundColor = useBoardStore((s) => s.updateBoardBackgroundColor);
-  const inviteMember = useBoardStore((s) => s.inviteMember);
-  const removeMember = useBoardStore((s) => s.removeMember);
-  const updateMemberRole = useBoardStore((s) => s.updateMemberRole);
-  const transferOwnership = useBoardStore((s) => s.transferOwnership);
-  const leaveBoard = useBoardStore((s) => s.leaveBoard);
-  const deleteBoard = useBoardStore((s) => s.deleteBoard);
+  const renameBoard = useRenameBoardMutation();
+  const updateBoardBackgroundColor = useUpdateBoardBackgroundColorMutation();
+  const inviteMember = useInviteMemberMutation();
+  const removeMember = useRemoveMemberMutation();
+  const updateMemberRole = useUpdateMemberRoleMutation();
+  const transferOwnership = useTransferOwnershipMutation();
+  const leaveBoard = useLeaveBoardMutation();
+  const deleteBoard = useDeleteActiveBoardMutation();
 
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [savingTitle, setSavingTitle] = useState(false);
   const [backgroundError, setBackgroundError] = useState<string | null>(null);
-  const [savingBackground, setSavingBackground] = useState(false);
 
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<BoardRole>("editor");
@@ -59,9 +64,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
   >(null);
   const [transferTargetId, setTransferTargetId] = useState("");
   const [transferError, setTransferError] = useState<string | null>(null);
-  const [transferLoading, setTransferLoading] = useState(false);
   const [transferMessage, setTransferMessage] = useState<string | null>(null);
-  const [dangerLoading, setDangerLoading] = useState(false);
   const [dangerError, setDangerError] = useState<string | null>(null);
 
   const editable = canEdit();
@@ -84,36 +87,23 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       return;
     }
     setTitleError(null);
-    setSavingTitle(true);
     try {
-      await renameBoard(trimmed);
+      await renameBoard.mutateAsync(trimmed);
       setTitleDraft(null);
-      if (board?.id) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards });
-      }
     } catch (err) {
       setTitleError(err instanceof Error ? err.message : "Failed to save name");
-    } finally {
-      setSavingTitle(false);
     }
   }
 
   async function onBackgroundChange(color: string) {
     if (!editable || color === boardBackground) return;
     setBackgroundError(null);
-    setSavingBackground(true);
     try {
-      await updateBoardBackgroundColor(color);
-      if (board?.id) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.board(board.id) });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards });
-      }
+      await updateBoardBackgroundColor.mutateAsync(color);
     } catch (err) {
       setBackgroundError(
         err instanceof Error ? err.message : "Failed to save background",
       );
-    } finally {
-      setSavingBackground(false);
     }
   }
 
@@ -122,7 +112,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
     setInviteMessage(null);
     setInviteError(null);
     try {
-      await inviteMember(email, inviteRole);
+      await inviteMember.mutateAsync({ email, role: inviteRole });
       setInviteMessage(`Invite sent to ${email}`);
       setEmail("");
     } catch (err) {
@@ -132,16 +122,12 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
 
   async function onConfirmDanger() {
     setDangerError(null);
-    setDangerLoading(true);
     try {
       if (confirmAction === "leave") {
-        await leaveBoard();
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards });
+        await leaveBoard.mutateAsync();
         router.push("/boards");
-      } else if (confirmAction === "delete" && board) {
-        await deleteBoard();
-        queryClient.removeQueries({ queryKey: queryKeys.board(board.id) });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards });
+      } else if (confirmAction === "delete") {
+        await deleteBoard.mutateAsync();
         router.push("/boards");
       }
       setConfirmAction(null);
@@ -149,30 +135,21 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       setDangerError(
         err instanceof Error ? err.message : "Something went wrong",
       );
-    } finally {
-      setDangerLoading(false);
     }
   }
 
   async function onConfirmTransfer() {
     if (!transferTargetId) return;
     setTransferError(null);
-    setTransferLoading(true);
     try {
-      await transferOwnership(transferTargetId);
+      await transferOwnership.mutateAsync(transferTargetId);
       setTransferMessage("Ownership transferred. You are now an editor.");
       setTransferTargetId("");
       setConfirmAction(null);
-      if (board?.id) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.board(board.id) });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.boards });
-      }
     } catch (err) {
       setTransferError(
         err instanceof Error ? err.message : "Failed to transfer ownership",
       );
-    } finally {
-      setTransferLoading(false);
     }
   }
 
@@ -207,7 +184,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                 value={boardTitle}
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onBlur={() => void saveTitleOnBlur()}
-                disabled={!editable || savingTitle}
+                disabled={!editable || renameBoard.isPending}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2 disabled:bg-slate-50"
               />
               {titleError && (
@@ -225,7 +202,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                     key={preset.value}
                     type="button"
                     title={preset.name}
-                    disabled={!editable || savingBackground}
+                    disabled={!editable || updateBoardBackgroundColor.isPending}
                     onClick={() => void onBackgroundChange(preset.value)}
                     className={`aspect-square rounded-lg border-2 transition hover:scale-105 disabled:opacity-50 ${
                       boardBackground === preset.value
@@ -241,7 +218,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                   <input
                     type="color"
                     value={boardBackground}
-                    disabled={savingBackground}
+                    disabled={updateBoardBackgroundColor.isPending}
                     onChange={(e) => void onBackgroundChange(e.target.value)}
                     className="h-9 w-12 cursor-pointer rounded border border-slate-200 bg-white p-0.5"
                   />
@@ -331,7 +308,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                         <button
                           type="button"
                           className="shrink-0 text-xs text-red-600"
-                          onClick={() => void removeMember(member.user_id)}
+                          onClick={() => removeMember.mutate(member.user_id)}
                         >
                           Remove
                         </button>
@@ -344,10 +321,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                       <select
                         value={member.role}
                         onChange={(e) =>
-                          void updateMemberRole(
-                            member.user_id,
-                            e.target.value as BoardRole,
-                          )
+                          updateMemberRole.mutate({
+                            userId: member.user_id,
+                            role: e.target.value as BoardRole,
+                          })
                         }
                         className="rounded border border-slate-200 px-2 py-1 text-xs"
                       >
@@ -387,9 +364,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                 </select>
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                  disabled={inviteMember.isPending}
+                  className="w-full rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
                 >
-                  Send invite
+                  {inviteMember.isPending ? "Sending…" : "Send invite"}
                 </button>
                 {inviteMessage && (
                   <p className="text-xs text-teal-700">{inviteMessage}</p>
@@ -438,10 +416,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
             : ""
         }
         confirmLabel="Transfer ownership"
-        loading={transferLoading}
+        loading={transferOwnership.isPending}
         onConfirm={() => void onConfirmTransfer()}
         onCancel={() => {
-          if (!transferLoading) {
+          if (!transferOwnership.isPending) {
             setConfirmAction(null);
             setTransferError(null);
           }
@@ -453,10 +431,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
         message="You will lose access to this board until someone invites you again."
         confirmLabel="Leave board"
         error={dangerError}
-        loading={dangerLoading}
+        loading={leaveBoard.isPending || deleteBoard.isPending}
         onConfirm={() => void onConfirmDanger()}
         onCancel={() => {
-          if (!dangerLoading) {
+          if (!leaveBoard.isPending && !deleteBoard.isPending) {
             setConfirmAction(null);
             setDangerError(null);
           }
@@ -468,10 +446,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
         message={`“${board?.title}” and all lists, cards, and comments will be permanently deleted.`}
         confirmLabel="Delete board"
         error={dangerError}
-        loading={dangerLoading}
+        loading={leaveBoard.isPending || deleteBoard.isPending}
         onConfirm={() => void onConfirmDanger()}
         onCancel={() => {
-          if (!dangerLoading) {
+          if (!leaveBoard.isPending && !deleteBoard.isPending) {
             setConfirmAction(null);
             setDangerError(null);
           }
