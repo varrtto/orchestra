@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useBoardQuery } from "@/hooks/use-boards";
-import { describeBoardChange } from "@/lib/board-realtime-notifications";
-import { DEFAULT_BOARD_BACKGROUND_COLOR } from "@/lib/board-background";
-import { queryKeys } from "@/lib/queries/boards";
-import { createClient } from "@/lib/supabase/client";
-import { useBoardStore } from "@/stores/board-store";
-import type { Card, CardAssignee, CardLabel, Comment, Label, List, Board, BoardMember } from "@/lib/types";
-import { AppHeader } from "@/components/layout/app-header";
 import { BoardCanvas } from "@/components/board/board-canvas";
-import { CardDetailModal } from "@/components/board/card-detail-modal";
 import { BoardSettingsSidebar } from "@/components/board/board-settings-sidebar";
 import { BoardSettingsToggle } from "@/components/board/board-settings-toggle";
+import { CardDetailModal } from "@/components/board/card-detail-modal";
+import { AppHeader } from "@/components/layout/app-header";
 import { CenteredSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
+import { useBoardQuery } from "@/hooks/use-boards";
+import { DEFAULT_BOARD_BACKGROUND_COLOR } from "@/lib/board-background";
+import { describeBoardChange } from "@/lib/board-realtime-notifications";
+import { queryKeys } from "@/lib/queries/boards";
+import { createClient } from "@/lib/supabase/client";
+import type { Board, BoardMember, Card, CardAssignee, CardLabel, Comment, Label, List } from "@/lib/types";
+import { useBoardStore } from "@/stores/board-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export function BoardPageClient({
   boardId,
@@ -31,7 +31,7 @@ export function BoardPageClient({
   const board = useBoardStore((s) => s.board);
   const selectedCardId = useBoardStore((s) => s.selectedCardId);
   const debouncedToasts = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useLayoutEffect(() => {
     if (data) hydrate(data, userId);
