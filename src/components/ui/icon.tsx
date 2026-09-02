@@ -7,6 +7,8 @@ import {
   Bell1Outlined,
   BoardWriting3Outlined,
   CalendarDaysOutlined,
+  Code1Outlined,
+  CodeSOutlined,
   Comment1Outlined,
   Crown3Outlined,
   Envelope1Outlined,
@@ -15,6 +17,7 @@ import {
   Gear1Outlined,
   Home2Outlined,
   Layers1Outlined,
+  Link2AngularRightOutlined,
   MenuHamburger1Outlined,
   Pencil1Outlined,
   PlusOutlined,
@@ -70,6 +73,14 @@ export function CommentIcon(props: Omit<IconProps, "icon">) {
   return <Icon icon={Comment1Outlined} {...props} />;
 }
 
+export function CodeBlockIcon(props: Omit<IconProps, "icon">) {
+  return <Icon icon={Code1Outlined} {...props} />;
+}
+
+export function CodeInlineIcon(props: Omit<IconProps, "icon">) {
+  return <Icon icon={CodeSOutlined} {...props} />;
+}
+
 export function CrownIcon(props: Omit<IconProps, "icon">) {
   return <Icon icon={Crown3Outlined} {...props} />;
 }
@@ -100,6 +111,10 @@ export function MenuIcon(props: Omit<IconProps, "icon">) {
 
 export function LayersIcon(props: Omit<IconProps, "icon">) {
   return <Icon icon={Layers1Outlined} {...props} />;
+}
+
+export function LinkIcon(props: Omit<IconProps, "icon">) {
+  return <Icon icon={Link2AngularRightOutlined} {...props} />;
 }
 
 export function PencilIcon(props: Omit<IconProps, "icon">) {

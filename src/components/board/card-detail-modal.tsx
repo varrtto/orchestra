@@ -9,6 +9,8 @@ import {
   UserIcon,
   XIcon,
 } from "@/components/ui/icon";
+import { MarkdownContent } from "@/components/ui/markdown-content";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { Modal } from "@/components/ui/modal";
 import {
   useAddCommentMutation,
@@ -22,7 +24,7 @@ import {
 import { getCardRef } from "@/lib/card-key";
 import type { Comment } from "@/lib/types";
 import { useBoardStore } from "@/stores/board-store";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 export function CardDetailModal() {
   const selectedCardId = useBoardStore((s) => s.selectedCardId);
@@ -50,6 +52,7 @@ export function CardDetailModal() {
   const canManageAssignees = role === "owner" || role === "editor";
   const titleId = useId();
 
+  const [descriptionDraft, setDescriptionDraft] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -90,6 +93,11 @@ export function CardDetailModal() {
       );
     }
   }
+
+  useEffect(() => {
+    if (!card) return;
+    setDescriptionDraft(card.description);
+  }, [card?.id, card?.description]);
 
   const cardCommentList = useMemo(
     () =>
@@ -156,7 +164,7 @@ export function CardDetailModal() {
           <button
             type="button"
             onClick={() => setSelectedCardId(null)}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer flex items-center justify-center"
             aria-label="Close card"
           >
             <XIcon size={18} />
@@ -169,20 +177,25 @@ export function CardDetailModal() {
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Description
               </h3>
-              <textarea
-                className="min-h-28 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2"
-                defaultValue={card.description}
-                disabled={!editable}
-                placeholder="Add a more detailed description…"
-                onBlur={(e) => {
-                  if (e.target.value !== card.description) {
-                    updateCard.mutate({
-                      cardId: card.id,
-                      patch: { description: e.target.value },
-                    });
-                  }
-                }}
-              />
+              {editable ? (
+                <MarkdownEditor
+                  value={descriptionDraft}
+                  onChange={setDescriptionDraft}
+                  placeholder="Add a more detailed description…"
+                  onBlur={() => {
+                    if (descriptionDraft !== card.description) {
+                      updateCard.mutate({
+                        cardId: card.id,
+                        patch: { description: descriptionDraft },
+                      });
+                    }
+                  }}
+                />
+              ) : (
+                <MarkdownContent emptyFallback="No description.">
+                  {card.description}
+                </MarkdownContent>
+              )}
             </section>
 
             <section>
@@ -245,10 +258,10 @@ export function CardDetailModal() {
                       </div>
                       {isEditing ? (
                         <div className="space-y-2">
-                          <textarea
-                            className="w-full rounded border border-slate-200 px-2 py-1 text-sm"
+                          <MarkdownEditor
                             value={editingBody}
-                            onChange={(e) => setEditingBody(e.target.value)}
+                            onChange={setEditingBody}
+                            minHeightClassName="min-h-20"
                           />
                           <div className="flex gap-2">
                             <button
@@ -274,9 +287,7 @@ export function CardDetailModal() {
                           </div>
                         </div>
                       ) : (
-                        <p className="whitespace-pre-wrap text-sm text-slate-800">
-                          {comment.body}
-                        </p>
+                        <MarkdownContent>{comment.body}</MarkdownContent>
                       )}
                     </li>
                   );
@@ -302,11 +313,11 @@ export function CardDetailModal() {
                     }
                   }}
                 >
-                  <textarea
+                  <MarkdownEditor
                     value={commentDraft}
-                    onChange={(e) => setCommentDraft(e.target.value)}
+                    onChange={setCommentDraft}
                     placeholder="Write a comment…"
-                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2"
+                    minHeightClassName="min-h-20"
                   />
                   {commentError && (
                     <p className="text-sm text-red-600">{commentError}</p>
