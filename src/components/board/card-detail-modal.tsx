@@ -128,15 +128,20 @@ export function CardDetailModal() {
         panelClassName="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
             {cardRef && (
-              <p className="mb-1 font-mono text-xs font-medium uppercase tracking-wide text-slate-400">
+              <span className="shrink-0 font-mono text-sm font-medium uppercase tracking-wide text-slate-400">
                 {cardRef}
-              </p>
+              </span>
+            )}
+            {cardRef && (
+              <span className="shrink-0 text-slate-300" aria-hidden>
+                /
+              </span>
             )}
             <input
               id={titleId}
-              className="min-w-0 w-full text-xl font-semibold text-slate-900 outline-none"
+              className="min-w-0 flex-1 text-xl font-semibold text-slate-900 outline-none"
               defaultValue={card.title}
               disabled={!editable}
               onBlur={(e) => {
