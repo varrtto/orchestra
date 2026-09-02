@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { randomBoardBackgroundColor } from "@/lib/board-background";
+import { normalizeCards } from "@/lib/normalize-card";
 import type {
   BoardMember,
   BoardRole,
@@ -113,13 +114,11 @@ export async function fetchBoard(boardId: string): Promise<FullBoard> {
   if (listIds.length > 0) {
     const { data: cardsData, error: cardsError } = await supabase
       .from("cards")
-      .select(
-        "id, list_id, card_number, title, description, due_date, position, created_at, updated_at",
-      )
+      .select("*")
       .in("list_id", listIds)
       .order("position");
     if (cardsError) throw cardsError;
-    cards = (cardsData ?? []) as Card[];
+    cards = normalizeCards((cardsData ?? []) as Card[]);
     const cardIds = cards.map((c) => c.id);
 
     if (cardIds.length > 0) {

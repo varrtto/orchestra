@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import { markLocalMutation } from "@/lib/local-mutation-tracker";
 import { isValidBoardBackgroundColor } from "@/lib/board-background";
+import { normalizeCard } from "@/lib/normalize-card";
 import { nextPosition, reindexPositions } from "@/lib/position";
 import type {
   Board,
@@ -229,8 +230,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       .select()
       .single();
     if (error) throw error;
-    markLocalMutation(`cards:${(data as Card).id}`);
-    set({ cards: sortByPosition([...get().cards, data as Card]) });
+    const card = normalizeCard(data as Card);
+    markLocalMutation(`cards:${card.id}`);
+    set({ cards: sortByPosition([...get().cards, card]) });
   },
 
   updateCard: async (cardId, patch) => {
@@ -631,25 +633,29 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   applyRealtimeCard: (card, event) => {
+    const normalized = normalizeCard(card);
     const listIds = new Set(get().lists.map((l) => l.id));
     if (event === "DELETE") {
-      set({ cards: get().cards.filter((c) => c.id !== card.id) });
+      set({ cards: get().cards.filter((c) => c.id !== normalized.id) });
       return;
     }
-    if (!listIds.has(card.list_id) && !get().cards.some((c) => c.id === card.id)) {
+    if (
+      !listIds.has(normalized.list_id) &&
+      !get().cards.some((c) => c.id === normalized.id)
+    ) {
       return;
     }
-    const exists = get().cards.some((c) => c.id === card.id);
+    const exists = get().cards.some((c) => c.id === normalized.id);
     if (exists) {
       set({
         cards: sortByPosition(
           get().cards.map((c) =>
-            c.id === card.id ? { ...c, ...card } : c,
+            c.id === normalized.id ? { ...c, ...normalized } : c,
           ),
         ),
       });
     } else {
-      set({ cards: sortByPosition([...get().cards, card]) });
+      set({ cards: sortByPosition([...get().cards, normalized]) });
     }
   },
 
