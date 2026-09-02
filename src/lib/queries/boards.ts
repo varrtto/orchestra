@@ -113,7 +113,9 @@ export async function fetchBoard(boardId: string): Promise<FullBoard> {
   if (listIds.length > 0) {
     const { data: cardsData, error: cardsError } = await supabase
       .from("cards")
-      .select("*")
+      .select(
+        "id, list_id, card_number, title, description, due_date, position, created_at, updated_at",
+      )
       .in("list_id", listIds)
       .order("position");
     if (cardsError) throw cardsError;

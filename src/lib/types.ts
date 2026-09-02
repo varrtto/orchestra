@@ -10,7 +10,7 @@ export type Profile = {
 export type Board = {
   id: string;
   title: string;
-  key: string;
+  key?: string | null;
   background_color: string;
   created_by: string;
   created_at: string;
@@ -36,7 +36,7 @@ export type List = {
 export type Card = {
   id: string;
   list_id: string;
-  number: number;
+  card_number?: number | null;
   title: string;
   description: string;
   due_date: string | null;

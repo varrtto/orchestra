@@ -582,7 +582,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   applyRealtimeBoard: (board, event) => {
     if (event !== "UPDATE" || board.id !== get().board?.id) return;
-    set({ board: { ...get().board!, ...board } });
+    const current = get().board!;
+    set({ board: { ...current, ...board, key: board.key ?? current.key } });
   },
 
   applyRealtimeMember: (member, event) => {
@@ -642,7 +643,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (exists) {
       set({
         cards: sortByPosition(
-          get().cards.map((c) => (c.id === card.id ? card : c)),
+          get().cards.map((c) =>
+            c.id === card.id ? { ...c, ...card } : c,
+          ),
         ),
       });
     } else {

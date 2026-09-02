@@ -1,7 +1,15 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
-import { useBoardStore } from "@/stores/board-store";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import {
+  CalendarIcon,
+  CommentIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+  XIcon,
+} from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import {
   useAddCommentMutation,
   useDeleteCardMutation,
@@ -11,18 +19,10 @@ import {
   useUpdateCardMutation,
   useUpdateCommentMutation,
 } from "@/hooks/use-board-mutations";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { Modal } from "@/components/ui/modal";
-import { formatCardKey } from "@/lib/card-key";
+import { getCardRef } from "@/lib/card-key";
 import type { Comment } from "@/lib/types";
-import {
-  CalendarIcon,
-  CommentIcon,
-  PencilIcon,
-  TrashIcon,
-  UserIcon,
-  XIcon,
-} from "@/components/ui/icon";
+import { useBoardStore } from "@/stores/board-store";
+import { useId, useMemo, useState } from "react";
 
 export function CardDetailModal() {
   const selectedCardId = useBoardStore((s) => s.selectedCardId);
@@ -115,8 +115,7 @@ export function CardDetailModal() {
   const assignedMembers = members.filter((member) =>
     activeAssigneeIds.has(member.user_id),
   );
-  const cardRef =
-    board?.key && card.number ? formatCardKey(board.key, card.number) : null;
+  const cardRef = getCardRef(board, card, cards);
 
   return (
     <>

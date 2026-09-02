@@ -1,12 +1,13 @@
 "use client";
 
-import { formatCardKey } from "@/lib/card-key";
+import { getCardRef } from "@/lib/card-key";
 import type { Card } from "@/lib/types";
 import { useBoardStore } from "@/stores/board-store";
 import { CalendarIcon, CommentIcon } from "@/components/ui/icon";
 
 export function CardItem({ card }: { card: Card }) {
-  const boardKey = useBoardStore((s) => s.board?.key);
+  const board = useBoardStore((s) => s.board);
+  const cards = useBoardStore((s) => s.cards);
   const setSelectedCardId = useBoardStore((s) => s.setSelectedCardId);
   const cardLabels = useBoardStore((s) => s.cardLabels);
   const labels = useBoardStore((s) => s.labels);
@@ -19,8 +20,7 @@ export function CardItem({ card }: { card: Card }) {
   const activeLabels = labels.filter((l) => labelIds.includes(l.id));
   const assignees = cardAssignees.filter((a) => a.card_id === card.id);
   const commentCount = comments.filter((c) => c.card_id === card.id).length;
-  const cardRef =
-    boardKey && card.number ? formatCardKey(boardKey, card.number) : null;
+  const cardRef = getCardRef(board, card, cards);
 
   return (
     <li
