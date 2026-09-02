@@ -115,7 +115,7 @@ export function BoardsPageClient() {
                 </div>
                 <p className="font-medium text-teal-950">No boards yet</p>
                 <p className="mt-1 text-sm text-slate-600">
-                  Create one above, or wait for an invite to land in your inbox.
+                  Create one above, or ask a teammate to invite you with your account email.
                 </p>
               </div>
             )}

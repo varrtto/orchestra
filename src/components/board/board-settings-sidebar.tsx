@@ -22,6 +22,7 @@ import {
   useInviteMemberMutation,
   useLeaveBoardMutation,
   useRemoveMemberMutation,
+  useRevokeInviteMutation,
   useRenameBoardMutation,
   useTransferOwnershipMutation,
   useUpdateBoardBackgroundColorMutation,
@@ -38,12 +39,14 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
   const router = useRouter();
   const board = useBoardStore((s) => s.board);
   const members = useBoardStore((s) => s.members);
+  const invites = useBoardStore((s) => s.invites);
   const role = useBoardStore((s) => s.role);
   const canEdit = useBoardStore((s) => s.canEdit);
   const currentUserId = useBoardStore((s) => s.currentUserId);
   const renameBoard = useRenameBoardMutation();
   const updateBoardBackgroundColor = useUpdateBoardBackgroundColorMutation();
   const inviteMember = useInviteMemberMutation();
+  const revokeInvite = useRevokeInviteMutation();
   const removeMember = useRemoveMemberMutation();
   const updateMemberRole = useUpdateMemberRoleMutation();
   const transferOwnership = useTransferOwnershipMutation();
@@ -111,12 +114,26 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
     e.preventDefault();
     setInviteMessage(null);
     setInviteError(null);
+    const trimmedEmail = email.trim();
     try {
-      await inviteMember.mutateAsync({ email, role: inviteRole });
-      setInviteMessage(`Invite sent to ${email}`);
+      await inviteMember.mutateAsync({ email: trimmedEmail, role: inviteRole });
+      setInviteMessage(
+        `Invite saved for ${trimmedEmail}. They'll get access when they sign in with that email.`,
+      );
       setEmail("");
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : "Invite failed");
+    }
+  }
+
+  async function onRevokeInvite(inviteId: string) {
+    setInviteError(null);
+    try {
+      await revokeInvite.mutateAsync(inviteId);
+    } catch (err) {
+      setInviteError(
+        err instanceof Error ? err.message : "Failed to cancel invite",
+      );
     }
   }
 
@@ -345,6 +362,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
           {editable && (
             <section>
               <SectionLabel icon={<EnvelopeIcon size={14} />}>Invite</SectionLabel>
+              <p className="mb-3 text-xs text-slate-500">
+                Invites are not emailed. Your teammate will see this board after
+                they sign up or log in with the same email address.
+              </p>
               <form onSubmit={onInvite} className="space-y-2">
                 <input
                   type="email"
@@ -367,7 +388,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                   disabled={inviteMember.isPending}
                   className="w-full rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
                 >
-                  {inviteMember.isPending ? "Sending…" : "Send invite"}
+                  {inviteMember.isPending ? "Saving…" : "Save invite"}
                 </button>
                 {inviteMessage && (
                   <p className="text-xs text-teal-700">{inviteMessage}</p>
@@ -376,6 +397,36 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                   <p className="text-xs text-red-600">{inviteError}</p>
                 )}
               </form>
+              {invites.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Pending invites
+                  </p>
+                  {invites.map((invite) => (
+                    <li
+                      key={invite.id}
+                      className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-800">
+                          {invite.email}
+                        </p>
+                        <p className="text-xs capitalize text-slate-500">
+                          {invite.role} · waiting for sign-in
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="shrink-0 text-xs text-red-600"
+                        disabled={revokeInvite.isPending}
+                        onClick={() => void onRevokeInvite(invite.id)}
+                      >
+                        Cancel
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
           )}
 

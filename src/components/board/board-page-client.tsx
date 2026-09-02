@@ -256,7 +256,7 @@ export function BoardPageClient({
   if (isLoading) {
     return (
       <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader backHref="/boards" titleCentered />
+        <AppHeader backHref="/boards" />
         <CenteredSpinner />
       </div>
     );
@@ -265,7 +265,7 @@ export function BoardPageClient({
   if (error || !data) {
     return (
       <div className="flex min-h-full flex-1 flex-col">
-        <AppHeader backHref="/boards" titleCentered />
+        <AppHeader backHref="/boards" />
         <p className="p-8 text-red-600">
           {error instanceof Error ? error.message : "Unable to load board"}
         </p>
@@ -278,11 +278,7 @@ export function BoardPageClient({
       className="flex h-dvh min-h-0 flex-col overflow-hidden transition-colors duration-500 ease-in-out"
       style={{ backgroundColor: boardBackground }}
     >
-      <AppHeader
-        backHref="/boards"
-        title={boardTitle}
-        titleCentered
-      />
+      <AppHeader backHref="/boards" title={boardTitle} />
       <div className="relative flex min-h-0 flex-1">
         <BoardCanvas key={data.board.id} />
         <BoardSettingsToggle

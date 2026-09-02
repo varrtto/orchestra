@@ -1,10 +1,12 @@
 "use client";
 
-import { useBoardStore } from "@/stores/board-store";
+import { formatCardKey } from "@/lib/card-key";
 import type { Card } from "@/lib/types";
+import { useBoardStore } from "@/stores/board-store";
 import { CalendarIcon, CommentIcon } from "@/components/ui/icon";
 
 export function CardItem({ card }: { card: Card }) {
+  const boardKey = useBoardStore((s) => s.board?.key);
   const setSelectedCardId = useBoardStore((s) => s.setSelectedCardId);
   const cardLabels = useBoardStore((s) => s.cardLabels);
   const labels = useBoardStore((s) => s.labels);
@@ -17,6 +19,8 @@ export function CardItem({ card }: { card: Card }) {
   const activeLabels = labels.filter((l) => labelIds.includes(l.id));
   const assignees = cardAssignees.filter((a) => a.card_id === card.id);
   const commentCount = comments.filter((c) => c.card_id === card.id).length;
+  const cardRef =
+    boardKey && card.number ? formatCardKey(boardKey, card.number) : null;
 
   return (
     <li
@@ -35,6 +39,11 @@ export function CardItem({ card }: { card: Card }) {
             />
           ))}
         </div>
+      )}
+      {cardRef && (
+        <p className="mb-1 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+          {cardRef}
+        </p>
       )}
       <p className="text-sm font-medium text-slate-800">{card.title}</p>
       <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">

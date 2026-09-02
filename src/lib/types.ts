@@ -10,6 +10,7 @@ export type Profile = {
 export type Board = {
   id: string;
   title: string;
+  key: string;
   background_color: string;
   created_by: string;
   created_at: string;
@@ -35,6 +36,7 @@ export type List = {
 export type Card = {
   id: string;
   list_id: string;
+  number: number;
   title: string;
   description: string;
   due_date: string | null;
@@ -95,4 +97,5 @@ export type FullBoard = {
   cardAssignees: CardAssignee[];
   comments: Comment[];
   members: BoardMember[];
+  invites: Invite[];
 };

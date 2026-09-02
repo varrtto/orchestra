@@ -13,6 +13,7 @@ import {
 } from "@/hooks/use-board-mutations";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Modal } from "@/components/ui/modal";
+import { formatCardKey } from "@/lib/card-key";
 import type { Comment } from "@/lib/types";
 import {
   CalendarIcon,
@@ -26,6 +27,7 @@ import {
 export function CardDetailModal() {
   const selectedCardId = useBoardStore((s) => s.selectedCardId);
   const setSelectedCardId = useBoardStore((s) => s.setSelectedCardId);
+  const board = useBoardStore((s) => s.board);
   const cards = useBoardStore((s) => s.cards);
   const labels = useBoardStore((s) => s.labels);
   const cardLabels = useBoardStore((s) => s.cardLabels);
@@ -113,6 +115,8 @@ export function CardDetailModal() {
   const assignedMembers = members.filter((member) =>
     activeAssigneeIds.has(member.user_id),
   );
+  const cardRef =
+    board?.key && card.number ? formatCardKey(board.key, card.number) : null;
 
   return (
     <>
@@ -124,20 +128,27 @@ export function CardDetailModal() {
         panelClassName="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-          <input
-            id={titleId}
-            className="min-w-0 flex-1 text-xl font-semibold text-slate-900 outline-none"
-            defaultValue={card.title}
-            disabled={!editable}
-            onBlur={(e) => {
-              const next = e.target.value.trim();
-              if (next && next !== card.title) {
-                updateCard.mutate({ cardId: card.id, patch: { title: next } });
-              } else {
-                e.target.value = card.title;
-              }
-            }}
-          />
+          <div className="min-w-0 flex-1">
+            {cardRef && (
+              <p className="mb-1 font-mono text-xs font-medium uppercase tracking-wide text-slate-400">
+                {cardRef}
+              </p>
+            )}
+            <input
+              id={titleId}
+              className="min-w-0 w-full text-xl font-semibold text-slate-900 outline-none"
+              defaultValue={card.title}
+              disabled={!editable}
+              onBlur={(e) => {
+                const next = e.target.value.trim();
+                if (next && next !== card.title) {
+                  updateCard.mutate({ cardId: card.id, patch: { title: next } });
+                } else {
+                  e.target.value = card.title;
+                }
+              }}
+            />
+          </div>
           <button
             type="button"
             onClick={() => setSelectedCardId(null)}

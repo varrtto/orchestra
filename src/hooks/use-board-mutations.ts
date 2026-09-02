@@ -117,6 +117,13 @@ export function useInviteMemberMutation() {
   });
 }
 
+export function useRevokeInviteMutation() {
+  const revokeInvite = useBoardStore((s) => s.revokeInvite);
+  return useMutation({
+    mutationFn: (inviteId: string) => revokeInvite(inviteId),
+  });
+}
+
 export function useRemoveMemberMutation() {
   const removeMember = useBoardStore((s) => s.removeMember);
   return useMutation({

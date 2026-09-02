@@ -14,6 +14,7 @@ import type {
   CardLabel,
   Comment,
   FullBoard,
+  Invite,
   Label,
   List,
   Profile,
@@ -29,6 +30,7 @@ type BoardState = {
   cardAssignees: CardAssignee[];
   comments: Comment[];
   members: BoardMember[];
+  invites: Invite[];
   currentUserId: string | null;
   selectedCardId: string | null;
   loading: boolean;
@@ -68,7 +70,8 @@ type BoardState = {
   updateComment: (commentId: string, body: string) => Promise<void>;
   deleteComment: (commentId: string) => Promise<void>;
 
-  inviteMember: (email: string, role: BoardRole) => Promise<void>;
+  inviteMember: (email: string, role: BoardRole) => Promise<Invite>;
+  revokeInvite: (inviteId: string) => Promise<void>;
   removeMember: (userId: string) => Promise<void>;
   updateMemberRole: (userId: string, role: BoardRole) => Promise<void>;
   transferOwnership: (newOwnerId: string) => Promise<void>;
@@ -113,6 +116,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   cardAssignees: [],
   comments: [],
   members: [],
+  invites: [],
   currentUserId: null,
   selectedCardId: null,
   loading: false,
@@ -129,6 +133,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       cardAssignees: data.cardAssignees,
       comments: data.comments,
       members: data.members,
+      invites: data.invites,
       currentUserId: userId,
       loading: false,
       error: null,
@@ -422,18 +427,43 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   inviteMember: async (email, role) => {
-    if (!get().canEdit()) return;
+    if (!get().canEdit()) {
+      throw new Error("Not allowed to invite members");
+    }
     const board = get().board;
     const userId = get().currentUserId;
-    if (!board || !userId) return;
+    if (!board || !userId) {
+      throw new Error("Board not loaded");
+    }
     const supabase = createClient();
-    const { error } = await supabase.from("invites").insert({
-      board_id: board.id,
-      email: email.trim().toLowerCase(),
-      role,
-      invited_by: userId,
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.rpc("upsert_board_invite", {
+      p_board_id: board.id,
+      p_email: normalizedEmail,
+      p_role: role,
     });
     if (error) throw error;
+    const invite = data as Invite;
+    set({
+      invites: [
+        ...get().invites.filter((item) => item.id !== invite.id),
+        invite,
+      ].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      ),
+    });
+    return invite;
+  },
+
+  revokeInvite: async (inviteId) => {
+    if (!get().canEdit()) return;
+    const supabase = createClient();
+    const { error } = await supabase.rpc("revoke_board_invite", {
+      p_invite_id: inviteId,
+    });
+    if (error) throw error;
+    set({ invites: get().invites.filter((invite) => invite.id !== inviteId) });
   },
 
   removeMember: async (userId) => {

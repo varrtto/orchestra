@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AppHeader } from "@/components/layout/app-header";
+import { AppHeader, boardsNavItem } from "@/components/layout/app-header";
 import { UserIcon } from "@/components/ui/icon";
 import {
   useProfileQuery,
@@ -39,7 +39,11 @@ export function ProfilePageClient() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader title="Profile" backHref="/boards" />
+      <AppHeader
+        title="Profile"
+        backHref="/boards"
+        navItem={boardsNavItem}
+      />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
         <div className="mb-8">
           <h1 className="flex items-center gap-2 font-display text-3xl text-teal-950">

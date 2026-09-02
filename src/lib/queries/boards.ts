@@ -9,6 +9,7 @@ import type {
   CardLabel,
   Comment,
   FullBoard,
+  Invite,
   Label,
   List,
   Profile,
@@ -78,7 +79,7 @@ export async function fetchBoard(boardId: string): Promise<FullBoard> {
 
   if (!membership) throw new Error("Board not found or access denied");
 
-  const [boardRes, listsRes, membersRes, labelsRes] = await Promise.all([
+  const [boardRes, listsRes, membersRes, labelsRes, invitesRes] = await Promise.all([
     supabase.from("boards").select("*").eq("id", boardId).single(),
     supabase
       .from("lists")
@@ -90,9 +91,16 @@ export async function fetchBoard(boardId: string): Promise<FullBoard> {
       .select("board_id, user_id, role, created_at, profiles(*)")
       .eq("board_id", boardId),
     supabase.from("labels").select("*").eq("board_id", boardId),
+    supabase
+      .from("invites")
+      .select("*")
+      .eq("board_id", boardId)
+      .eq("status", "pending")
+      .order("created_at"),
   ]);
 
   if (boardRes.error || !boardRes.data) throw boardRes.error ?? new Error("Board missing");
+  if (invitesRes.error) throw invitesRes.error;
 
   const lists = (listsRes.data ?? []) as List[];
   const listIds = lists.map((l) => l.id);
@@ -163,6 +171,7 @@ export async function fetchBoard(boardId: string): Promise<FullBoard> {
     cardAssignees,
     comments,
     members,
+    invites: (invitesRes.data ?? []) as Invite[],
   };
 }
 
