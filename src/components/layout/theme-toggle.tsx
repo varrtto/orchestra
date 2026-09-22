@@ -15,14 +15,12 @@ export function ThemeToggle() {
       aria-label={isDark ? t("nav.switchToLight") : t("nav.switchToDark")}
       aria-pressed={isDark}
       title={isDark ? t("nav.switchToLight") : t("nav.switchToDark")}
-      className="theme-toggle group relative inline-flex h-9 w-[3.25rem] shrink-0 cursor-pointer items-center rounded-full border border-slate-200 bg-slate-100 p-0.5 shadow-sm transition-[border-color,background-color,box-shadow] duration-300 hover:border-teal-200 hover:bg-teal-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-teal-700 dark:hover:bg-slate-700"
+      className="theme-toggle group relative inline-flex h-9 w-14 shrink-0 cursor-pointer items-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 p-0.5 shadow-sm transition-[border-color,background-color,box-shadow] duration-300 hover:border-teal-200 hover:bg-teal-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-teal-700 dark:hover:bg-slate-700"
     >
       <span
         aria-hidden
         className={`absolute inset-y-0.5 left-0.5 flex size-8 items-center justify-center rounded-full bg-white text-amber-500 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.4,0.64,1)] dark:bg-slate-950 dark:text-teal-200 ${
-          isDark
-            ? "translate-x-[1.35rem] rotate-[240deg]"
-            : "translate-x-0 rotate-0"
+          isDark ? "translate-x-5 rotate-180" : "translate-x-0 rotate-0"
         }`}
       >
         <svg
