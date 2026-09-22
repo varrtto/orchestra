@@ -2,6 +2,7 @@
 
 import { CodeBlockIcon, CodeInlineIcon, LinkIcon } from "@/components/ui/icon";
 import { MarkdownContent } from "@/components/ui/markdown-content";
+import { useT } from "@/components/providers/locale-provider";
 import { insertAtCursor } from "@/lib/markdown/insert-at-cursor";
 import type { ReactNode } from "react";
 import { useId, useRef, useState } from "react";
@@ -38,7 +39,7 @@ function ToolbarButton({
       aria-label={title}
       disabled={disabled}
       onClick={onClick}
-      className={`rounded p-1 text-xs text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 ${className}`.trim()}
+      className={`rounded p-1 text-xs text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700 ${className}`.trim()}
     >
       {children}
     </button>
@@ -54,6 +55,7 @@ export function MarkdownEditor({
   minHeightClassName = "min-h-28",
   showToolbar = true,
 }: MarkdownEditorProps) {
+  const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [tab, setTab] = useState<EditorTab>("write");
   const writeTabId = useId();
@@ -66,12 +68,12 @@ export function MarkdownEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-2 py-1.5">
+    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/70 px-2 py-1.5">
         {showToolbar ? (
           <div className="flex flex-wrap items-center gap-0.5">
             <ToolbarButton
-              title="Bold"
+              title={t("editor.bold")}
               disabled={disabled || tab === "preview"}
               className="font-bold"
               onClick={() => wrapSelection("**", "**", "bold")}
@@ -79,7 +81,7 @@ export function MarkdownEditor({
               B
             </ToolbarButton>
             <ToolbarButton
-              title="Italic"
+              title={t("editor.italic")}
               disabled={disabled || tab === "preview"}
               className="italic"
               onClick={() => wrapSelection("*", "*", "italic")}
@@ -87,21 +89,21 @@ export function MarkdownEditor({
               I
             </ToolbarButton>
             <ToolbarButton
-              title="Link"
+              title={t("editor.link")}
               disabled={disabled || tab === "preview"}
               onClick={() => wrapSelection("[", "](https://)", "text")}
             >
               <LinkIcon size={14} />
             </ToolbarButton>
             <ToolbarButton
-              title="Inline code"
+              title={t("editor.inlineCode")}
               disabled={disabled || tab === "preview"}
               onClick={() => wrapSelection("`", "`", "code")}
             >
               <CodeInlineIcon size={14} />
             </ToolbarButton>
             <ToolbarButton
-              title="Code block"
+              title={t("editor.codeBlock")}
               disabled={disabled || tab === "preview"}
               onClick={() => wrapSelection("```\n", "\n```", "code")}
             >
@@ -112,9 +114,9 @@ export function MarkdownEditor({
           <span />
         )}
         <div
-          className="inline-flex rounded-md border border-slate-200 bg-white p-0.5 text-xs"
+          className="inline-flex rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 p-0.5 text-xs"
           role="tablist"
-          aria-label="Editor mode"
+          aria-label={t("editor.mode")}
         >
           <button
             type="button"
@@ -127,10 +129,10 @@ export function MarkdownEditor({
             className={`rounded px-2 py-0.5 ${
               tab === "write"
                 ? "bg-teal-700 text-white"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
-            Write
+            {t("editor.write")}
           </button>
           <button
             type="button"
@@ -142,10 +144,10 @@ export function MarkdownEditor({
             className={`rounded px-2 py-0.5 ${
               tab === "preview"
                 ? "bg-teal-700 text-white"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
-            Preview
+            {t("editor.preview")}
           </button>
         </div>
       </div>
@@ -161,16 +163,16 @@ export function MarkdownEditor({
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
           onBlur={onBlur}
-          className={`${minHeightClassName} w-full resize-y border-0 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2`}
+          className={`${minHeightClassName} w-full resize-y border-0 bg-white px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2 dark:bg-slate-900 dark:text-slate-100`}
         />
       ) : (
         <div
           id={`${previewTabId}-panel`}
           role="tabpanel"
           aria-labelledby={previewTabId}
-          className={`${minHeightClassName} overflow-y-auto px-3 py-2`}
+          className={`${minHeightClassName} overflow-y-auto bg-white px-3 py-2 dark:bg-slate-900`}
         >
-          <MarkdownContent emptyFallback="Nothing to preview yet.">
+          <MarkdownContent emptyFallback={t("editor.nothingToPreview")}>
             {value}
           </MarkdownContent>
         </div>

@@ -12,6 +12,7 @@ import type { List } from "@/lib/types";
 import { ListColumn } from "@/components/board/list-column";
 import { PromptModal } from "@/components/ui/prompt-modal";
 import { PlusIcon } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 
 function reorderListsLocal(lists: List[], draggedId: string, toIndex: number) {
   const fromIndex = lists.findIndex((list) => list.id === draggedId);
@@ -39,6 +40,7 @@ function getTargetIndex(
 }
 
 export function BoardCanvas() {
+  const t = useT();
   const lists = useBoardStore((s) => s.lists);
   const canEdit = useBoardStore((s) => s.canEdit);
   const addList = useAddListMutation();
@@ -77,7 +79,7 @@ export function BoardCanvas() {
       setAddColumnOpen(false);
     } catch (err) {
       setAddColumnError(
-        err instanceof Error ? err.message : "Failed to create column",
+        err instanceof Error ? err.message : t("board.createColumnFailed"),
       );
     }
   }
@@ -167,10 +169,10 @@ export function BoardCanvas() {
                 setAddColumnKey((key) => key + 1);
                 setAddColumnOpen(true);
               }}
-              className="inline-flex w-72 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-white/30 bg-white/10 px-4 py-3 text-left text-sm text-white/90 transition hover:bg-white/15"
+              className="inline-flex w-72 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-white/30 dark:border-white/20 bg-white/10 px-4 py-3 text-left text-sm text-white/90 transition hover:bg-white/15"
             >
               <PlusIcon size={18} color="currentColor" />
-              Add column
+              {t("board.addColumn")}
             </button>
           )}
         </div>
@@ -179,10 +181,10 @@ export function BoardCanvas() {
       <PromptModal
         key={addColumnKey}
         open={addColumnOpen}
-        title="Add column"
-        label="Column name"
-        placeholder="e.g. In progress"
-        confirmLabel="Add column"
+        title={t("board.addColumn")}
+        label={t("board.columnName")}
+        placeholder={t("board.columnPlaceholder")}
+        confirmLabel={t("board.addColumn")}
         error={addColumnError}
         loading={addList.isPending}
         onConfirm={(title) => void onConfirmAddColumn(title)}

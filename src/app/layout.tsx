@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Outfit, Fraunces } from "next/font/google";
+import { LocaleProvider } from "@/components/providers/locale-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -27,11 +30,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${outfit.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
         <QueryProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ThemeProvider>
+            <LocaleProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </LocaleProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>

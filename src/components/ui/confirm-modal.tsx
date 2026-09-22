@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { Modal, ModalActions, ModalError } from "@/components/ui/modal";
 import { TrashIcon } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 
 type ConfirmModalProps = {
   open: boolean;
@@ -20,11 +21,12 @@ export function ConfirmModal({
   title,
   message,
   error,
-  confirmLabel = "Delete",
+  confirmLabel,
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const t = useT();
   const titleId = useId();
 
   return (
@@ -36,23 +38,23 @@ export function ConfirmModal({
     >
       <h2
         id={titleId}
-        className="flex items-center gap-2 text-lg font-semibold text-slate-900"
+        className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400">
           <TrashIcon size={18} />
         </span>
         {title}
       </h2>
-      <p className="mt-2 text-sm text-slate-600">{message}</p>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message}</p>
       {error && <ModalError>{error}</ModalError>}
       <ModalActions>
         <button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="button"
@@ -60,7 +62,7 @@ export function ConfirmModal({
           disabled={loading}
           className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
         >
-          {loading ? "Deleting…" : confirmLabel}
+          {loading ? t("common.working") : (confirmLabel ?? t("common.delete"))}
         </button>
       </ModalActions>
     </Modal>

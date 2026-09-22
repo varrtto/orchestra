@@ -1,9 +1,12 @@
 export type BoardRole = "owner" | "editor" | "viewer";
 
+export type PreferredLanguage = "en" | "es";
+
 export type Profile = {
   id: string;
   email: string;
   display_name: string | null;
+  preferred_language: PreferredLanguage;
   created_at: string;
 };
 

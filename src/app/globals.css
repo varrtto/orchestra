@@ -1,25 +1,48 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f4f7f6;
   --foreground: #0f1c1a;
   --surface: #ffffff;
+  --surface-muted: #f8fafc;
   --muted: #5b6b68;
   --accent: #0f766e;
   --accent-soft: #ccfbf1;
   --board-bg: #0f3d3a;
   --column: #e8efed;
+  --border: rgb(15 23 42 / 0.12);
+  --header-bg: rgb(255 255 255 / 0.9);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0b1211;
+  --foreground: #e8efed;
+  --surface: #151c1b;
+  --surface-muted: #1a2220;
+  --muted: #9aaba7;
+  --accent: #2dd4bf;
+  --accent-soft: #134e4a;
+  --board-bg: #0a2e2b;
+  --column: #1a2422;
+  --border: rgb(148 163 184 / 0.18);
+  --header-bg: rgb(15 23 22 / 0.92);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-board-bg: var(--board-bg);
   --color-column: var(--column);
+  --color-border: var(--border);
+  --color-header: var(--header-bg);
   --font-sans: var(--font-outfit);
   --font-display: var(--font-fraunces);
 }
@@ -28,6 +51,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-outfit), system-ui, sans-serif;
+  transition: background-color 0.35s ease, color 0.25s ease;
 }
 
 .font-display {
@@ -41,6 +65,11 @@ body {
   border-top-color: #0f766e;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+.dark .spinner {
+  border-color: rgb(45 212 191 / 0.2);
+  border-top-color: #2dd4bf;
 }
 
 @keyframes spin {
@@ -114,12 +143,21 @@ body {
   color: #475569;
 }
 
+.dark .markdown-content blockquote {
+  border-left-color: rgb(45 212 191 / 0.4);
+  color: #94a3b8;
+}
+
 .markdown-content pre {
   margin: 0.5rem 0;
   overflow-x: auto;
   border-radius: 0.5rem;
   background: #f1f5f9;
   padding: 0.75rem;
+}
+
+.dark .markdown-content pre {
+  background: #0f1716;
 }
 
 .markdown-content code {
@@ -131,6 +169,10 @@ body {
   border-radius: 0.25rem;
   background: #f1f5f9;
   padding: 0.1rem 0.3rem;
+}
+
+.dark .markdown-content :not(pre) > code {
+  background: #0f1716;
 }
 
 .markdown-content table {
@@ -147,13 +189,26 @@ body {
   text-align: left;
 }
 
+.dark .markdown-content th,
+.dark .markdown-content td {
+  border-color: rgb(148 163 184 / 0.2);
+}
+
 .markdown-content th {
   background: #f8fafc;
   font-weight: 600;
+}
+
+.dark .markdown-content th {
+  background: #1a2220;
 }
 
 .markdown-content hr {
   margin: 0.75rem 0;
   border: 0;
   border-top: 1px solid #e2e8f0;
+}
+
+.dark .markdown-content hr {
+  border-top-color: rgb(148 163 184 / 0.2);
 }

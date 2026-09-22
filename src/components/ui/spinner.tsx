@@ -1,8 +1,13 @@
+"use client";
+
+import { useT } from "@/components/providers/locale-provider";
+
 export function Spinner({ className = "" }: { className?: string }) {
+  const t = useT();
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={t("common.loading")}
       className={`spinner ${className}`}
     />
   );

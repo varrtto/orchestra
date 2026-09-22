@@ -13,6 +13,7 @@ import type { Card, List } from "@/lib/types";
 import { CardItem } from "@/components/board/card-item";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { MenuIcon, PlusIcon, TrashIcon } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 
 type ListColumnProps = {
   list: List;
@@ -32,6 +33,7 @@ export function ListColumn({
   isDragging = false,
   onGripPointerDown,
 }: ListColumnProps) {
+  const t = useT();
   const allCards = useBoardStore((s) => s.cards);
   const canEdit = useBoardStore((s) => s.canEdit);
   const renameList = useRenameListMutation();
@@ -72,7 +74,7 @@ export function ListColumn({
       setConfirmDelete(false);
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete column",
+        err instanceof Error ? err.message : t("board.deleteColumnFailed"),
       );
     }
   }
@@ -86,7 +88,7 @@ export function ListColumn({
       setDraft("");
     } catch (err) {
       setAddCardError(
-        err instanceof Error ? err.message : "Failed to create card",
+        err instanceof Error ? err.message : t("board.createCardFailed"),
       );
     }
   }
@@ -98,20 +100,20 @@ export function ListColumn({
         isDragging ? "opacity-60 ring-2 ring-teal-600/40" : ""
       }`}
     >
-      <div className="flex items-center gap-1 border-b border-teal-900/10 px-2 py-2">
+      <div className="flex items-center gap-1 border-b border-teal-900/10 dark:border-white/10 px-2 py-2">
         {editable && (
           <div
             role="button"
             tabIndex={0}
-            aria-label="Drag to reorder list"
-            className="touch-none cursor-grab rounded p-1 text-slate-400 hover:bg-white/60 hover:text-slate-700 active:cursor-grabbing"
+            aria-label={t("board.dragList")}
+            className="touch-none cursor-grab rounded p-1 text-slate-400 dark:text-slate-500 hover:bg-white/60 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-slate-200 active:cursor-grabbing"
             onPointerDown={onGripPointerDown}
           >
             <MenuIcon size={14} className="pointer-events-none" />
           </div>
         )}
         <input
-          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none"
           defaultValue={list.title}
           disabled={!editable}
           onBlur={(e) => {
@@ -126,8 +128,8 @@ export function ListColumn({
         {editable && (
           <button
             type="button"
-            className="cursor-pointer rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-            aria-label="Delete column"
+            className="cursor-pointer rounded p-1 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-600 dark:hover:text-red-400"
+            aria-label={t("board.deleteColumnAria")}
             onClick={() => {
               setDeleteError(null);
               setConfirmDelete(true);
@@ -149,30 +151,30 @@ export function ListColumn({
       </ul>
 
       {editable && (
-        <form onSubmit={onAddCard} className="border-t border-teal-900/10 p-2">
+        <form onSubmit={onAddCard} className="border-t border-teal-900/10 dark:border-white/10 p-2">
           <div className="relative">
-            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-400">
+            <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
               <PlusIcon size={14} />
             </span>
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Add a card…"
+              placeholder={t("board.addCardPlaceholder")}
               disabled={addCard.isPending}
-              className="w-full rounded-lg border border-transparent bg-white/70 py-1.5 pl-7 pr-2 text-sm outline-none ring-teal-600 placeholder:text-slate-400 focus:border-teal-700/20 focus:ring-1 disabled:opacity-60"
+              className="w-full rounded-lg border border-transparent bg-white/70 dark:bg-slate-900/70 py-1.5 pl-7 pr-2 text-sm outline-none ring-teal-600 placeholder:text-slate-400 dark:text-slate-500 focus:border-teal-700/20 focus:ring-1 disabled:opacity-60"
             />
           </div>
           {addCardError && (
-            <p className="mt-1 text-xs text-red-600">{addCardError}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{addCardError}</p>
           )}
         </form>
       )}
 
       <ConfirmModal
         open={confirmDelete}
-        title="Delete column?"
-        message={`“${list.title}” and all of its cards will be permanently deleted.`}
-        confirmLabel="Delete column"
+        title={t("board.deleteColumnTitle")}
+        message={t("board.deleteColumnMessage", { title: list.title })}
+        confirmLabel={t("board.deleteColumnConfirm")}
         error={deleteError}
         loading={deleteList.isPending}
         onConfirm={() => void onConfirmDelete()}

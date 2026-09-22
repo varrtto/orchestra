@@ -6,7 +6,7 @@ const DEFAULT_OVERLAY_CLASSNAME =
   "fixed inset-0 z-[60] flex items-center justify-center bg-teal-950/50 p-4 backdrop-blur-sm";
 
 const DEFAULT_PANEL_CLASSNAME =
-  "w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl";
+  "w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl";
 
 type ModalProps = {
   open: boolean;
@@ -65,5 +65,5 @@ export function ModalActions({ children }: { children: ReactNode }) {
 }
 
 export function ModalError({ children }: { children: ReactNode }) {
-  return <p className="mt-3 text-sm text-red-600">{children}</p>;
+  return <p className="mt-3 text-sm text-red-600 dark:text-red-400">{children}</p>;
 }

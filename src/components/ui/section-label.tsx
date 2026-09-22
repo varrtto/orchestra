@@ -8,8 +8,8 @@ export function SectionLabel({
   children: ReactNode;
 }) {
   return (
-    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-      <span className="text-teal-700">{icon}</span>
+    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <span className="text-teal-700 dark:text-teal-300">{icon}</span>
       {children}
     </h3>
   );

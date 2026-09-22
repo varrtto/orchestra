@@ -13,6 +13,7 @@ import {
   TrashIcon,
   UserIcon,
 } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 import {
   useBoardsQuery,
   useCreateBoardMutation,
@@ -21,7 +22,17 @@ import {
 import type { BoardWithRole } from "@/lib/types";
 import { DEFAULT_BOARD_BACKGROUND_COLOR } from "@/lib/board-background";
 
+function roleLabel(
+  role: BoardWithRole["role"],
+  t: ReturnType<typeof useT>,
+) {
+  if (role === "owner") return t("roles.owner");
+  if (role === "editor") return t("roles.editor");
+  return t("roles.viewer");
+}
+
 export function BoardsPageClient() {
+  const t = useT();
   const { data: boards, isLoading, error, isFetching } = useBoardsQuery();
   const createBoard = useCreateBoardMutation();
   const deleteBoard = useDeleteBoardMutation();
@@ -39,7 +50,9 @@ export function BoardsPageClient() {
       await createBoard.mutateAsync(trimmed);
       setTitle("");
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to create board");
+      setFormError(
+        err instanceof Error ? err.message : t("boards.createFailed"),
+      );
     }
   }
 
@@ -51,7 +64,7 @@ export function BoardsPageClient() {
       setBoardToDelete(null);
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete board",
+        err instanceof Error ? err.message : t("boards.deleteFailed"),
       );
     }
   }
@@ -62,28 +75,26 @@ export function BoardsPageClient() {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 font-display text-3xl text-teal-950">
+            <h1 className="flex items-center gap-2 font-display text-3xl text-teal-950 dark:text-teal-50">
               <LayersIcon size={28} color="#0f766e" />
-              Your boards
+              {t("boards.heading")}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Shared spaces for lists, cards, and comments
-            </p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("boards.subtitle")}</p>
           </div>
           {isFetching && !isLoading && (
-            <span className="text-xs text-slate-400">Refreshing…</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{t("boards.refreshing")}</span>
           )}
         </div>
 
         <form
           onSubmit={onCreate}
-          className="mb-6 flex flex-col gap-3 rounded-xl border border-teal-900/10 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
+          className="mb-6 flex flex-col gap-3 rounded-xl border border-teal-900/10 dark:border-white/10 bg-white dark:bg-slate-900 p-4 shadow-sm sm:flex-row sm:items-center"
         >
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="New board title"
-            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 outline-none ring-teal-600 focus:ring-2"
+            placeholder={t("boards.newBoardPlaceholder")}
+            className="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 outline-none ring-teal-600 focus:ring-2 dark:text-slate-100"
           />
           <button
             type="submit"
@@ -91,10 +102,10 @@ export function BoardsPageClient() {
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800 disabled:opacity-50"
           >
             <PlusIcon size={18} color="currentColor" />
-            {createBoard.isPending ? "Creating…" : "Create board"}
+            {createBoard.isPending ? t("boards.creating") : t("boards.createBoard")}
           </button>
         </form>
-        {formError && <p className="mb-4 text-sm text-red-600">{formError}</p>}
+        {formError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{formError}</p>}
 
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -103,19 +114,19 @@ export function BoardsPageClient() {
         ) : (
           <>
             {error && (
-              <p className="text-red-600">
-                {error instanceof Error ? error.message : "Failed to load boards"}
+              <p className="text-red-600 dark:text-red-400">
+                {error instanceof Error ? error.message : t("boards.loadFailed")}
               </p>
             )}
 
             {boards && boards.length === 0 && (
-              <div className="rounded-xl border border-dashed border-teal-800/20 bg-teal-50/50 px-6 py-12 text-center">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+              <div className="rounded-xl border border-dashed border-teal-800/20 dark:border-teal-500/20 bg-teal-50/50 dark:bg-teal-950/40 px-6 py-12 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300">
                   <BoardIcon size={24} color="currentColor" />
                 </div>
-                <p className="font-medium text-teal-950">No boards yet</p>
-                <p className="mt-1 text-sm text-slate-600">
-                  Create one above, or ask a teammate to invite you with your account email.
+                <p className="font-medium text-teal-950 dark:text-teal-50">{t("boards.emptyTitle")}</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {t("boards.emptyBody")}
                 </p>
               </div>
             )}
@@ -138,13 +149,13 @@ export function BoardsPageClient() {
                       ) : (
                         <UserIcon size={14} color="currentColor" />
                       )}
-                      {board.role}
+                      {roleLabel(board.role, t)}
                     </p>
                   </Link>
                   {board.role === "owner" && (
                     <button
                       type="button"
-                      aria-label={`Delete ${board.title}`}
+                      aria-label={t("boards.deleteAria", { title: board.title })}
                       onClick={() => {
                         setDeleteError(null);
                         setBoardToDelete(board);
@@ -163,14 +174,14 @@ export function BoardsPageClient() {
 
       <ConfirmModal
         open={Boolean(boardToDelete)}
-        title="Delete board?"
+        title={t("boards.deleteTitle")}
         error={deleteError}
         message={
           boardToDelete
-            ? `“${boardToDelete.title}” and all its lists, cards, and comments will be permanently deleted. This cannot be undone.`
+            ? t("boards.deleteMessage", { title: boardToDelete.title })
             : ""
         }
-        confirmLabel="Delete board"
+        confirmLabel={t("boards.deleteConfirm")}
         loading={deleteBoard.isPending}
         onConfirm={() => void onConfirmDelete()}
         onCancel={() => {

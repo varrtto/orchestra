@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightIcon, GearIcon } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 
 export function BoardSettingsToggle({
   open,
@@ -9,13 +10,15 @@ export function BoardSettingsToggle({
   open: boolean;
   onToggle: () => void;
 }) {
+  const t = useT();
+
   return (
     <button
       type="button"
-      aria-label={open ? "Close board settings" : "Open board settings"}
+      aria-label={open ? t("board.closeSettings") : t("board.openSettings")}
       aria-expanded={open}
       onClick={onToggle}
-      className={`absolute right-0 top-2 z-20 inline-flex size-9 cursor-pointer items-center justify-center border border-slate-200 bg-white text-slate-600 shadow-sm transition-all duration-300 ease-in-out hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800 rounded-l-lg border-r-0`}
+      className={`absolute right-0 top-2 z-20 inline-flex size-9 cursor-pointer items-center justify-center border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 shadow-sm transition-all duration-300 ease-in-out hover:border-teal-200 dark:hover:border-teal-800 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-800 dark:hover:text-teal-300 rounded-l-lg border-r-0`}
     >
       <span className="relative flex size-5 items-center justify-center">
         <GearIcon

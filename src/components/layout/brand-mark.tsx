@@ -10,8 +10,8 @@ export function BrandMark({
   const iconSize = size === "lg" ? 36 : 22;
   const textClass =
     size === "lg"
-      ? "font-display text-4xl tracking-tight text-teal-950"
-      : "font-display text-xl text-teal-950";
+      ? "font-display text-4xl tracking-tight text-teal-950 dark:text-teal-50"
+      : "font-display text-xl text-teal-950 dark:text-teal-50";
 
   return (
     <div className="flex items-center justify-center gap-2.5">

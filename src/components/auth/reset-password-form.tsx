@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { EnterIcon } from "@/components/ui/icon";
+import { useT } from "@/components/providers/locale-provider";
 import { useResetPasswordMutation } from "@/hooks/use-auth";
 
 export function ResetPasswordForm() {
+  const t = useT();
   const router = useRouter();
   const resetPassword = useResetPasswordMutation();
   const [password, setPassword] = useState("");
@@ -51,16 +53,16 @@ export function ResetPasswordForm() {
     setError(null);
 
     if (!sessionReady) {
-      setError("Your reset link has expired. Please request a new one.");
+      setError(t("auth.resetLinkExpired"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t("auth.passwordTooShort"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("auth.passwordsDoNotMatch"));
       return;
     }
 
@@ -71,26 +73,25 @@ export function ResetPasswordForm() {
       router.push("/login?message=password_updated");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to update password");
+      setError(
+        err instanceof Error ? err.message : t("auth.unableUpdatePassword"),
+      );
     }
   }
 
   if (checkingSession) {
-    return <p className="text-sm text-slate-600">Verifying reset link…</p>;
+    return <p className="text-sm text-slate-600 dark:text-slate-300">{t("auth.verifyingLink")}</p>;
   }
 
   if (!sessionReady) {
     return (
       <div className="flex w-full max-w-sm flex-col gap-4">
-        <p className="text-sm text-red-600">
-          This reset link is invalid or has expired. Request a new one and try
-          again.
-        </p>
+        <p className="text-sm text-red-600 dark:text-red-400">{t("auth.resetLinkInvalid")}</p>
         <Link
           href="/forgot-password"
-          className="text-center text-sm font-medium text-teal-700 hover:underline"
+          className="text-center text-sm font-medium text-teal-700 dark:text-teal-300 hover:underline"
         >
-          Request a new reset link
+          {t("auth.requestNewLink")}
         </Link>
       </div>
     );
@@ -99,8 +100,8 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-          New password
+        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+          {t("auth.newPassword")}
         </label>
         <input
           id="password"
@@ -109,15 +110,15 @@ export function ResetPasswordForm() {
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-teal-600 focus:ring-2"
+          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-slate-100 outline-none ring-teal-600 focus:ring-2"
         />
       </div>
       <div>
         <label
           htmlFor="confirm-password"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
         >
-          Confirm password
+          {t("auth.confirmPassword")}
         </label>
         <input
           id="confirm-password"
@@ -126,21 +127,21 @@ export function ResetPasswordForm() {
           minLength={6}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none ring-teal-600 focus:ring-2"
+          className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-slate-100 outline-none ring-teal-600 focus:ring-2"
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <button
         type="submit"
         disabled={resetPassword.isPending}
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2.5 font-medium text-white transition hover:bg-teal-800 disabled:opacity-60"
       >
         <EnterIcon size={18} color="currentColor" />
-        {resetPassword.isPending ? "Updating…" : "Update password"}
+        {resetPassword.isPending ? t("auth.updating") : t("auth.updatePassword")}
       </button>
-      <p className="text-center text-sm text-slate-600">
-        <Link href="/login" className="font-medium text-teal-700 hover:underline">
-          Back to sign in
+      <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+        <Link href="/login" className="font-medium text-teal-700 dark:text-teal-300 hover:underline">
+          {t("auth.backToSignIn")}
         </Link>
       </p>
     </form>

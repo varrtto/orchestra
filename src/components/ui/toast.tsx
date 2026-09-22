@@ -35,9 +35,9 @@ function ToastEntry({
   return (
     <div
       role="status"
-      className="pointer-events-auto flex max-w-sm items-start gap-3 rounded-xl border border-teal-950/10 bg-white px-4 py-3 text-sm text-slate-800 shadow-lg shadow-teal-950/10 animate-[toast-in_0.2s_ease-out]"
+      className="pointer-events-auto flex max-w-sm items-start gap-3 rounded-xl border border-teal-950/10 dark:border-white/10 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-800 dark:text-slate-100 shadow-lg shadow-teal-950/10 animate-[toast-in_0.2s_ease-out]"
     >
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
         <BellIcon size={16} />
       </span>
       <span>{message}</span>

@@ -30,12 +30,20 @@ import {
 } from "@/hooks/use-board-mutations";
 import { useBoardStore } from "@/stores/board-store";
 import type { BoardRole } from "@/lib/types";
+import { useT } from "@/components/providers/locale-provider";
 
 type BoardSettingsSidebarProps = {
   open: boolean;
 };
 
+function roleLabel(role: BoardRole, t: ReturnType<typeof useT>) {
+  if (role === "owner") return t("roles.owner");
+  if (role === "editor") return t("roles.editor");
+  return t("roles.viewer");
+}
+
 export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
+  const t = useT();
   const router = useRouter();
   const board = useBoardStore((s) => s.board);
   const members = useBoardStore((s) => s.members);
@@ -94,7 +102,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       await renameBoard.mutateAsync(trimmed);
       setTitleDraft(null);
     } catch (err) {
-      setTitleError(err instanceof Error ? err.message : "Failed to save name");
+      setTitleError(err instanceof Error ? err.message : t("settings.saveNameFailed"));
     }
   }
 
@@ -105,7 +113,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       await updateBoardBackgroundColor.mutateAsync(color);
     } catch (err) {
       setBackgroundError(
-        err instanceof Error ? err.message : "Failed to save background",
+        err instanceof Error ? err.message : t("settings.saveBackgroundFailed"),
       );
     }
   }
@@ -118,11 +126,11 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
     try {
       await inviteMember.mutateAsync({ email: trimmedEmail, role: inviteRole });
       setInviteMessage(
-        `Invite saved for ${trimmedEmail}. They'll get access when they sign in with that email.`,
+        t("settings.inviteSaved", { email: trimmedEmail }),
       );
       setEmail("");
     } catch (err) {
-      setInviteError(err instanceof Error ? err.message : "Invite failed");
+      setInviteError(err instanceof Error ? err.message : t("settings.inviteFailed"));
     }
   }
 
@@ -132,7 +140,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       await revokeInvite.mutateAsync(inviteId);
     } catch (err) {
       setInviteError(
-        err instanceof Error ? err.message : "Failed to cancel invite",
+        err instanceof Error ? err.message : t("settings.cancelInviteFailed"),
       );
     }
   }
@@ -150,7 +158,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       setConfirmAction(null);
     } catch (err) {
       setDangerError(
-        err instanceof Error ? err.message : "Something went wrong",
+        err instanceof Error ? err.message : t("settings.somethingWentWrong"),
       );
     }
   }
@@ -160,12 +168,12 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
     setTransferError(null);
     try {
       await transferOwnership.mutateAsync(transferTargetId);
-      setTransferMessage("Ownership transferred. You are now an editor.");
+      setTransferMessage(t("settings.transferSuccess"));
       setTransferTargetId("");
       setConfirmAction(null);
     } catch (err) {
       setTransferError(
-        err instanceof Error ? err.message : "Failed to transfer ownership",
+        err instanceof Error ? err.message : t("settings.transferFailed"),
       );
     }
   }
@@ -173,7 +181,7 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
   return (
     <>
       <aside
-        className={`flex h-full shrink-0 flex-col overflow-hidden border-l border-teal-950/20 bg-white transition-[width] duration-300 ease-in-out ${
+        className={`flex h-full shrink-0 flex-col overflow-hidden border-l border-teal-950/20 dark:border-white/10 bg-white dark:bg-slate-900 transition-[width] duration-300 ease-in-out ${
           open ? "w-80" : "w-0 border-l-0"
         }`}
       >
@@ -182,19 +190,21 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
             open ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-          <div className="flex items-center border-b border-slate-100 px-4 py-3 pr-12">
-            <h2 className="flex items-center gap-2 font-semibold text-slate-800">
+          <div className="flex items-center border-b border-slate-100 dark:border-slate-700 px-4 py-3 pr-12">
+            <h2 className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-100">
               <GearIcon size={18} color="#0f766e" />
-              Board settings
+              {t("settings.title")}
             </h2>
           </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <section>
-            <SectionLabel icon={<PencilIcon size={14} />}>General</SectionLabel>
+            <SectionLabel icon={<PencilIcon size={14} />}>
+              {t("settings.general")}
+            </SectionLabel>
             <div className="space-y-2">
               <label htmlFor="board-title" className="sr-only">
-                Board name
+                {t("settings.boardName")}
               </label>
               <input
                 id="board-title"
@@ -202,16 +212,16 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onBlur={() => void saveTitleOnBlur()}
                 disabled={!editable || renameBoard.isPending}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2 disabled:bg-slate-50"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2 disabled:bg-slate-50 dark:disabled:bg-slate-800"
               />
               {titleError && (
-                <p className="text-xs text-red-600">{titleError}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">{titleError}</p>
               )}
             </div>
 
             <div className="mt-4 space-y-2">
               <SectionLabel icon={<LayersIcon size={14} />}>
-                Background
+                {t("settings.background")}
               </SectionLabel>
               <div className="grid grid-cols-4 gap-2">
                 {BOARD_BACKGROUND_PRESETS.map((preset) => (
@@ -231,19 +241,19 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                 ))}
               </div>
               {editable && (
-                <label className="flex items-center gap-2 text-sm text-slate-600">
+                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                   <input
                     type="color"
                     value={boardBackground}
                     disabled={updateBoardBackgroundColor.isPending}
                     onChange={(e) => void onBackgroundChange(e.target.value)}
-                    className="h-9 w-12 cursor-pointer rounded border border-slate-200 bg-white p-0.5"
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 p-0.5"
                   />
-                  Custom color
+                  {t("settings.customColor")}
                 </label>
               )}
               {backgroundError && (
-                <p className="text-xs text-red-600">{backgroundError}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">{backgroundError}</p>
               )}
             </div>
           </section>
@@ -251,11 +261,11 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
           {isOwner && (
             <section>
               <SectionLabel icon={<CrownIcon size={14} />}>
-                Transfer ownership
+                {t("settings.transferOwnership")}
               </SectionLabel>
-              <div className="space-y-2 rounded-lg bg-slate-50 px-3 py-3">
-                <p className="text-xs text-slate-500">
-                  Transfer ownership to another member. You will become an editor.
+              <div className="space-y-2 rounded-lg bg-slate-50 dark:bg-slate-800/70 px-3 py-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t("settings.transferHint")}
                 </p>
                 <select
                   value={transferTargetId}
@@ -264,13 +274,13 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                     setTransferMessage(null);
                     setTransferError(null);
                   }}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm"
                 >
-                  <option value="">Select a member…</option>
+                  <option value="">{t("settings.selectMember")}</option>
                   {transferCandidates.map((member) => (
                     <option key={member.user_id} value={member.user_id}>
                       {member.profile?.display_name ?? member.profile?.email} (
-                      {member.role})
+                      {roleLabel(member.role, t)})
                     </option>
                   ))}
                 </select>
@@ -281,15 +291,15 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                     setTransferError(null);
                     setConfirmAction("transfer");
                   }}
-                  className="w-full rounded-lg border border-teal-200 bg-white px-3 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50 disabled:opacity-50"
+                  className="w-full rounded-lg border border-teal-200 dark:border-teal-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-medium text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950 disabled:opacity-50"
                 >
-                  Transfer ownership
+                  {t("settings.transferButton")}
                 </button>
                 {transferMessage && (
-                  <p className="text-xs text-teal-700">{transferMessage}</p>
+                  <p className="text-xs text-teal-700 dark:text-teal-300">{transferMessage}</p>
                 )}
                 {transferError && !confirmAction && (
-                  <p className="text-xs text-red-600">{transferError}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">{transferError}</p>
                 )}
               </div>
             </section>
@@ -297,25 +307,25 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
 
           <section>
             <SectionLabel icon={<UsersIcon size={14} />}>
-              Members ({members.length})
+              {t("settings.members", { count: members.length })}
             </SectionLabel>
             <ul className="space-y-2">
               {members.map((member) => (
                 <li
                   key={member.user_id}
-                  className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                  className="rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 px-3 py-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-800">
+                      <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                         {member.profile?.display_name ?? member.profile?.email}
                         {member.user_id === currentUserId && (
-                          <span className="ml-1 text-xs text-slate-400">
-                            (you)
+                          <span className="ml-1 text-xs text-slate-400 dark:text-slate-500">
+                            {t("common.you")}
                           </span>
                         )}
                       </p>
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                         {member.profile?.email}
                       </p>
                     </div>
@@ -324,10 +334,10 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                       member.role !== "owner" && (
                         <button
                           type="button"
-                          className="shrink-0 text-xs text-red-600"
+                          className="shrink-0 text-xs text-red-600 dark:text-red-400"
                           onClick={() => removeMember.mutate(member.user_id)}
                         >
-                          Remove
+                          {t("settings.remove")}
                         </button>
                       )}
                   </div>
@@ -343,14 +353,14 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                             role: e.target.value as BoardRole,
                           })
                         }
-                        className="rounded border border-slate-200 px-2 py-1 text-xs"
+                        className="rounded border border-slate-200 dark:border-slate-600 px-2 py-1 text-xs"
                       >
-                        <option value="editor">Editor</option>
-                        <option value="viewer">Viewer</option>
+                        <option value="editor">{t("roles.editor")}</option>
+                        <option value="viewer">{t("roles.viewer")}</option>
                       </select>
                     ) : (
-                      <span className="text-xs capitalize text-slate-500">
-                        {member.role}
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {roleLabel(member.role, t)}
                       </span>
                     )}
                   </div>
@@ -361,10 +371,11 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
 
           {editable && (
             <section>
-              <SectionLabel icon={<EnvelopeIcon size={14} />}>Invite</SectionLabel>
-              <p className="mb-3 text-xs text-slate-500">
-                Invites are not emailed. Your teammate will see this board after
-                they sign up or log in with the same email address.
+              <SectionLabel icon={<EnvelopeIcon size={14} />}>
+                {t("settings.invite")}
+              </SectionLabel>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                {t("settings.inviteHint")}
               </p>
               <form onSubmit={onInvite} className="space-y-2">
                 <input
@@ -373,55 +384,58 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="teammate@company.com"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm outline-none ring-teal-600 focus:ring-2"
                 />
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as BoardRole)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm"
                 >
-                  <option value="editor">Editor</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="editor">{t("roles.editor")}</option>
+                  <option value="viewer">{t("roles.viewer")}</option>
                 </select>
                 <button
                   type="submit"
                   disabled={inviteMember.isPending}
                   className="w-full rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
                 >
-                  {inviteMember.isPending ? "Saving…" : "Save invite"}
+                  {inviteMember.isPending
+                    ? t("common.saving")
+                    : t("settings.saveInvite")}
                 </button>
                 {inviteMessage && (
-                  <p className="text-xs text-teal-700">{inviteMessage}</p>
+                  <p className="text-xs text-teal-700 dark:text-teal-300">{inviteMessage}</p>
                 )}
                 {inviteError && (
-                  <p className="text-xs text-red-600">{inviteError}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">{inviteError}</p>
                 )}
               </form>
               {invites.length > 0 && (
                 <ul className="mt-4 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Pending invites
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {t("settings.pendingInvites")}
                   </p>
                   {invites.map((invite) => (
                     <li
                       key={invite.id}
-                      className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                      className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 px-3 py-2"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-800">
+                        <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                           {invite.email}
                         </p>
-                        <p className="text-xs capitalize text-slate-500">
-                          {invite.role} · waiting for sign-in
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {roleLabel(invite.role, t)} ·{" "}
+                          {t("settings.waitingForSignIn")}
                         </p>
                       </div>
                       <button
                         type="button"
-                        className="shrink-0 text-xs text-red-600"
+                        className="shrink-0 text-xs text-red-600 dark:text-red-400"
                         disabled={revokeInvite.isPending}
                         onClick={() => void onRevokeInvite(invite.id)}
                       >
-                        Cancel
+                        {t("settings.cancel")}
                       </button>
                     </li>
                   ))}
@@ -431,24 +445,26 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
           )}
 
           <section>
-            <SectionLabel icon={<ShieldIcon size={14} />}>Danger zone</SectionLabel>
+            <SectionLabel icon={<ShieldIcon size={14} />}>
+              {t("settings.dangerZone")}
+            </SectionLabel>
             <div className="space-y-2">
               {!isOwner && (
                 <button
                   type="button"
                   onClick={() => setConfirmAction("leave")}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/70"
                 >
-                  Leave board
+                  {t("settings.leaveBoard")}
                 </button>
               )}
               {isOwner && (
                 <button
                   type="button"
                   onClick={() => setConfirmAction("delete")}
-                  className="w-full rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="w-full rounded-lg border border-red-200 dark:border-red-900 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
                 >
-                  Delete board
+                  {t("settings.deleteBoard")}
                 </button>
               )}
             </div>
@@ -459,14 +475,19 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
 
       <ConfirmModal
         open={confirmAction === "transfer"}
-        title="Transfer ownership?"
+        title={t("settings.transferConfirmTitle")}
         error={transferError}
         message={
           transferTarget
-            ? `“${transferTarget.profile?.display_name ?? transferTarget.profile?.email}” will become the board owner and you will become an editor.`
+            ? t("settings.transferConfirmMessage", {
+                name:
+                  transferTarget.profile?.display_name ??
+                  transferTarget.profile?.email ??
+                  "",
+              })
             : ""
         }
-        confirmLabel="Transfer ownership"
+        confirmLabel={t("settings.transferButton")}
         loading={transferOwnership.isPending}
         onConfirm={() => void onConfirmTransfer()}
         onCancel={() => {
@@ -478,9 +499,9 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       />
       <ConfirmModal
         open={confirmAction === "leave"}
-        title="Leave this board?"
-        message="You will lose access to this board until someone invites you again."
-        confirmLabel="Leave board"
+        title={t("settings.leaveConfirmTitle")}
+        message={t("settings.leaveConfirmMessage")}
+        confirmLabel={t("settings.leaveBoard")}
         error={dangerError}
         loading={leaveBoard.isPending || deleteBoard.isPending}
         onConfirm={() => void onConfirmDanger()}
@@ -493,9 +514,11 @@ export function BoardSettingsSidebar({ open }: BoardSettingsSidebarProps) {
       />
       <ConfirmModal
         open={confirmAction === "delete"}
-        title="Delete this board?"
-        message={`“${board?.title}” and all lists, cards, and comments will be permanently deleted.`}
-        confirmLabel="Delete board"
+        title={t("settings.deleteConfirmTitle")}
+        message={t("settings.deleteConfirmMessage", {
+          title: board?.title ?? "",
+        })}
+        confirmLabel={t("settings.deleteBoard")}
         error={dangerError}
         loading={leaveBoard.isPending || deleteBoard.isPending}
         onConfirm={() => void onConfirmDanger()}

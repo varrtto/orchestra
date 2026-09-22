@@ -12,7 +12,7 @@ const markdownComponents: Components = {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="font-medium text-teal-700 underline decoration-teal-700/40 underline-offset-2 hover:decoration-teal-700"
+      className="font-medium text-teal-700 dark:text-teal-300 underline decoration-teal-700/40 underline-offset-2 hover:decoration-teal-700"
     >
       {children}
     </a>
@@ -45,13 +45,13 @@ export function MarkdownContent({
   const trimmed = children.trim();
   if (!trimmed) {
     if (emptyFallback) {
-      return <p className="text-sm text-slate-400">{emptyFallback}</p>;
+      return <p className="text-sm text-slate-400 dark:text-slate-500">{emptyFallback}</p>;
     }
     return null;
   }
 
   return (
-    <div className={`markdown-content text-sm text-slate-800 ${className}`.trim()}>
+    <div className={`markdown-content text-sm text-slate-800 dark:text-slate-100 ${className}`.trim()}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeSanitize, markdownSanitizeSchema]]}

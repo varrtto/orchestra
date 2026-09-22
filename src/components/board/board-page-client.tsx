@@ -7,6 +7,7 @@ import { CardDetailModal } from "@/components/board/card-detail-modal";
 import { AppHeader } from "@/components/layout/app-header";
 import { CenteredSpinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
+import { useT } from "@/components/providers/locale-provider";
 import { useBoardQuery } from "@/hooks/use-boards";
 import { DEFAULT_BOARD_BACKGROUND_COLOR } from "@/lib/board-background";
 import { describeBoardChange } from "@/lib/board-realtime-notifications";
@@ -26,6 +27,7 @@ export function BoardPageClient({
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const t = useT();
   const { data, isLoading, error } = useBoardQuery(boardId);
   const hydrate = useBoardStore((s) => s.hydrate);
   const board = useBoardStore((s) => s.board);
@@ -90,6 +92,7 @@ export function BoardPageClient({
           comments: state.comments,
         },
         userId,
+        t,
       );
 
       if (!notification) return;
@@ -245,7 +248,7 @@ export function BoardPageClient({
       debouncedToastTimers.clear();
       void supabase.removeChannel(channel);
     };
-  }, [boardId, queryClient, toast, userId]);
+  }, [boardId, queryClient, t, toast, userId]);
 
   const boardTitle = board?.title ?? data?.board.title;
   const boardBackground =
@@ -266,8 +269,8 @@ export function BoardPageClient({
     return (
       <div className="flex min-h-full flex-1 flex-col">
         <AppHeader backHref="/boards" />
-        <p className="p-8 text-red-600">
-          {error instanceof Error ? error.message : "Unable to load board"}
+        <p className="p-8 text-red-600 dark:text-red-400">
+          {error instanceof Error ? error.message : t("board.loadFailed")}
         </p>
       </div>
     );

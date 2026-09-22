@@ -26,7 +26,7 @@ export function CardItem({ card }: { card: Card }) {
     <li
       data-label={card.id}
       onClick={() => setSelectedCardId(card.id)}
-      className="cursor-pointer rounded-lg border border-teal-900/5 bg-white px-3 py-2 shadow-sm transition hover:border-teal-700/30 hover:shadow"
+      className="cursor-pointer rounded-lg border border-teal-900/5 bg-white px-3 py-2 shadow-sm transition hover:border-teal-700/30 hover:shadow dark:border-white/10 dark:bg-slate-900 dark:hover:border-teal-500/30"
     >
       {activeLabels.length > 0 && (
         <div className="mb-1.5 flex flex-wrap gap-1">
@@ -41,12 +41,12 @@ export function CardItem({ card }: { card: Card }) {
         </div>
       )}
       {cardRef && (
-        <p className="mb-1 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400">
+        <p className="mb-1 font-mono text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
           {cardRef}
         </p>
       )}
-      <p className="text-sm font-medium text-slate-800">{card.title}</p>
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
+      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{card.title}</p>
+      <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
         {card.due_date && (
           <span className="inline-flex items-center gap-1">
             <CalendarIcon size={12} />
